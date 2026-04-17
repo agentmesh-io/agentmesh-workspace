@@ -63,11 +63,11 @@
 
 ## Upcoming Milestones
 
-### 🔲 M7 — Git & DevOps Foundation (Target: April 2026)
+### ✅ M7 — Git & DevOps Foundation (April 2026)
 - [x] Execute git versioning strategy ✅
-- [x] Set up GitHub repos with branch protection ✅ (repos created, protection pending)
-- [ ] Add CI/CD pipelines (GitHub Actions)
-- [ ] Add proper `.env.example` files
+- [x] Set up GitHub repos under `agentmesh-io` org ✅
+- [x] Add CI/CD pipelines (GitHub Actions) ✅
+- [x] Add proper `.env.example` files ✅
 
 ### 🔲 M8 — End-to-End Integration (Target: May 2026)
 - [ ] Auto-BADS → AgentMesh pipeline (60% done)
@@ -109,7 +109,7 @@
 |------|--------|------------|------------|
 | Unmerged branches cause conflicts | ~~High~~ | ~~High~~ | ✅ Resolved — all merged |
 | Uncommitted work lost | ~~Critical~~ | ~~Medium~~ | ✅ Resolved — all pushed to GitHub |
-| No CI/CD — regressions undetected | High | High | Set up GitHub Actions (M7) |
+| No CI/CD — regressions undetected | ~~High~~ | ~~High~~ | ✅ Resolved — GitHub Actions CI added |
 | MockLLM masks integration issues | Medium | High | Real LLM integration (M9) |
 | Single developer — bus factor 1 | High | - | Document everything, push to GitHub |
 | No automated security scanning | Medium | Medium | Add dependency scanning in CI |
