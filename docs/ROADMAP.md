@@ -70,10 +70,11 @@
 - [x] Add proper `.env.example` files ✅
 
 ### 🔲 M8 — End-to-End Integration (Target: May 2026)
-- [ ] Auto-BADS → AgentMesh pipeline (60% done)
-- [ ] Full UI → Backend → Analysis flow
-- [ ] Integration test suite
-- [ ] Error handling & retry logic across services
+- [x] Auto-BADS → AgentMesh pipeline ✅ (ProjectController + /api/projects/initialize)
+- [x] Full UI → Backend → Analysis flow ✅ (projectsApi + flow tracking endpoint)
+- [x] Integration test suite ✅ (ProjectControllerTest contract tests)
+- [x] Error handling & retry logic ✅ (DLQ in EventConsumer, circuit breaker in Auto-BADS)
+- [ ] Runtime E2E validation (requires services running)
 
 ### 🔲 M9 — Real LLM Integration (Target: May 2026)
 - [ ] Replace MockLLMClient with Ollama/OpenAI
