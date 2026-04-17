@@ -1,0 +1,10 @@
+# Subprojects (separate repos)
+AgentMesh/
+AgentMesh-UI/
+Auto-BADS/
+# Logs
+logs/
+# IDE
+.idea/
+.DS_Store
+*.swp
