@@ -84,10 +84,11 @@
 - [ ] Runtime validation (requires LMStudio running)
 
 ### 🔲 M10 — API Gateway & Service Mesh (Target: June 2026)
-- [ ] Traefik/Kong API gateway
-- [ ] Service discovery
-- [ ] Rate limiting & auth (JWT/OAuth2)
-- [ ] Inter-service communication hardening
+- [x] Traefik API gateway ✅ (docker-compose.gateway.yml)
+- [x] Service discovery ✅ (Docker labels-based routing)
+- [x] Rate limiting & auth (API key + forwardAuth) ✅
+- [x] Inter-service communication hardening ✅ (circuit breaker, retry, security headers)
+- [ ] JWT/OAuth2 (deferred to M11 production hardening)
 
 ### 🔲 M11 — Production Hardening (Target: July 2026)
 - [ ] Security audit (OWASP Top 10)
