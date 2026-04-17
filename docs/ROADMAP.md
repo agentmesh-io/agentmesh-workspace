@@ -77,10 +77,11 @@
 - [ ] Runtime E2E validation (requires services running)
 
 ### 🔲 M9 — Real LLM Integration (Target: May 2026)
-- [ ] Replace MockLLMClient with Ollama/OpenAI
-- [ ] Multi-provider support (started)
-- [ ] Token usage tracking & cost management
+- [x] Replace MockLLMClient with real providers ✅ (OpenAICompatibleClient)
+- [x] Multi-provider support ✅ (LMStudio, Ollama, OpenAI via single client)
+- [x] Token usage tracking & cost management ✅ (built into client)
 - [ ] Prompt management system
+- [ ] Runtime validation (requires LMStudio running)
 
 ### 🔲 M10 — API Gateway & Service Mesh (Target: June 2026)
 - [ ] Traefik/Kong API gateway
@@ -111,7 +112,7 @@
 | Unmerged branches cause conflicts | ~~High~~ | ~~High~~ | ✅ Resolved — all merged |
 | Uncommitted work lost | ~~Critical~~ | ~~Medium~~ | ✅ Resolved — all pushed to GitHub |
 | No CI/CD — regressions undetected | ~~High~~ | ~~High~~ | ✅ Resolved — GitHub Actions CI added |
-| MockLLM masks integration issues | Medium | High | Real LLM integration (M9) |
+| MockLLM masks integration issues | ~~Medium~~ | ~~High~~ | ✅ Resolved — OpenAICompatibleClient added (M9) |
 | Single developer — bus factor 1 | High | - | Document everything, push to GitHub |
 | No automated security scanning | Medium | Medium | Add dependency scanning in CI |
 
