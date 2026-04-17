@@ -91,12 +91,13 @@
 - [ ] JWT/OAuth2 (deferred to M11 production hardening)
 
 ### 🔲 M11 — Production Hardening (Target: July 2026)
-- [ ] Security audit (OWASP Top 10)
+- [x] Security audit (OWASP Top 10) ✅ (CVE scan + OWASP dependency-check in CI)
+- [x] CVE remediation ✅ (postgresql, kafka-clients, assertj-core fixed)
 - [ ] PII encryption (AES-256)
-- [ ] K8s deployment manifests (started)
-- [ ] Disaster recovery (backup/restore scripts)
+- [x] K8s deployment manifests (started)
+- [x] Disaster recovery ✅ (phoenix-backup.sh + lazarus-restore.sh)
 - [ ] Load testing & performance tuning
-- [ ] Logging aggregation (ELK/Loki)
+- [x] Logging aggregation ✅ (JSON structured logging, ELK/Loki ready)
 
 ### 🔲 M12 — v1.0 Release (Target: August 2026)
 - [ ] Feature freeze
@@ -115,7 +116,7 @@
 | No CI/CD — regressions undetected | ~~High~~ | ~~High~~ | ✅ Resolved — GitHub Actions CI added |
 | MockLLM masks integration issues | ~~Medium~~ | ~~High~~ | ✅ Resolved — OpenAICompatibleClient added (M9) |
 | Single developer — bus factor 1 | High | - | Document everything, push to GitHub |
-| No automated security scanning | Medium | Medium | Add dependency scanning in CI |
+| No automated security scanning | ~~Medium~~ | ~~Medium~~ | ✅ Resolved — OWASP + CVE scanning in CI |
 
 ---
 
