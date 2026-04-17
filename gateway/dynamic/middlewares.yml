@@ -1,0 +1,42 @@
+# Traefik Dynamic Configuration
+# Rate limiting, headers, and middleware
+
+http:
+  middlewares:
+    # Global security headers
+    security-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        frameDeny: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customResponseHeaders:
+          X-Powered-By: "AgentMesh"
+
+    # JWT Auth middleware (for protected routes)
+    jwt-auth:
+      forwardAuth:
+        address: "http://agentmesh-api:8080/api/auth/verify"
+        authResponseHeaders:
+          - "X-User-Id"
+          - "X-Tenant-Id"
+
+    # Retry on failure
+    retry-middleware:
+      retry:
+        attempts: 3
+        initialInterval: 100ms
+
+    # Circuit breaker
+    circuit-breaker:
+      circuitBreaker:
+        expression: "ResponseCodeRatio(500, 600, 0, 600) > 0.30"
+
+    # Compress responses
+    compress:
+      compress:
+        excludedContentTypes:
+          - "text/event-stream"
+

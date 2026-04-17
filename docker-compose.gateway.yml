@@ -1,0 +1,120 @@
+services:
+  # ═══════════════════════════════════════════════════════════
+  # Traefik API Gateway / Reverse Proxy
+  # Routes: [service].localhost → container
+  # Dashboard: http://traefik.localhost
+  # ═══════════════════════════════════════════════════════════
+  traefik:
+    image: traefik:v3.1
+    container_name: agentmesh-traefik
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entryPoint=metrics"
+      - "--entrypoints.metrics.address=:8082"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8082:8082"    # Prometheus metrics
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./gateway/dynamic:/etc/traefik/dynamic:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+    networks:
+      - agentmesh-net
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════
+  # AgentMesh Backend (Spring Boot) — Port 8080
+  # Route: api.localhost
+  # ═══════════════════════════════════════════════════════════
+  agentmesh-api:
+    build:
+      context: ./AgentMesh
+      dockerfile: Dockerfile
+    container_name: agentmesh-api
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - LLM_PROVIDER=${LLM_PROVIDER:-}
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://host.docker.internal:1234/v1}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-default}
+    labels:
+      - "traefik.enable=true"
+      # Main API router
+      - "traefik.http.routers.agentmesh-api.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.agentmesh-api.entrypoints=web"
+      - "traefik.http.services.agentmesh-api.loadbalancer.server.port=8080"
+      # Rate limiting
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=50"
+      - "traefik.http.routers.agentmesh-api.middlewares=api-ratelimit"
+      # CORS headers
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowOriginList=http://localhost:3000,http://app.localhost"
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowMethods=GET,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowHeaders=Content-Type,Authorization,X-Tenant-Id"
+    networks:
+      - agentmesh-net
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════
+  # AgentMesh UI (Next.js) — Port 3000
+  # Route: app.localhost
+  # ═══════════════════════════════════════════════════════════
+  agentmesh-ui:
+    build:
+      context: ./AgentMesh-UI/agentmesh-ui
+      dockerfile: Dockerfile
+    container_name: agentmesh-ui
+    environment:
+      - NEXT_PUBLIC_AGENTMESH_API=http://api.localhost
+      - NEXT_PUBLIC_AUTOBADS_API=http://bads.localhost
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.agentmesh-ui.rule=Host(`app.localhost`)"
+      - "traefik.http.routers.agentmesh-ui.entrypoints=web"
+      - "traefik.http.services.agentmesh-ui.loadbalancer.server.port=3000"
+    networks:
+      - agentmesh-net
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════
+  # Auto-BADS (Spring Boot) — Port 8083
+  # Route: bads.localhost
+  # ═══════════════════════════════════════════════════════════
+  auto-bads:
+    build:
+      context: ./Auto-BADS
+      dockerfile: Dockerfile
+    container_name: agentmesh-autobads
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - AGENTMESH_API_URL=http://agentmesh-api:8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auto-bads.rule=Host(`bads.localhost`)"
+      - "traefik.http.routers.auto-bads.entrypoints=web"
+      - "traefik.http.services.auto-bads.loadbalancer.server.port=8083"
+      # Rate limiting
+      - "traefik.http.middlewares.bads-ratelimit.ratelimit.average=50"
+      - "traefik.http.middlewares.bads-ratelimit.ratelimit.burst=20"
+      - "traefik.http.routers.auto-bads.middlewares=bads-ratelimit"
+    networks:
+      - agentmesh-net
+    restart: unless-stopped
+
+networks:
+  agentmesh-net:
+    driver: bridge
+
