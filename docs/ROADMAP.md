@@ -1,7 +1,7 @@
 # 🗺️ AgentMesh Platform — ROADMAP
 
-**Last Updated:** April 17, 2026 (M7 executed)  
-**Status:** Active Development — Pre-Production
+**Last Updated:** April 19, 2026 (Sprint Demo M7–M11 complete, M12 started)  
+**Status:** Active Development — v1.0 Release Phase
 
 ---
 
@@ -69,39 +69,44 @@
 - [x] Add CI/CD pipelines (GitHub Actions) ✅
 - [x] Add proper `.env.example` files ✅
 
-### 🔲 M8 — End-to-End Integration (Target: May 2026)
+### ✅ M8 — End-to-End Integration (April 2026)
 - [x] Auto-BADS → AgentMesh pipeline ✅ (ProjectController + /api/projects/initialize)
 - [x] Full UI → Backend → Analysis flow ✅ (projectsApi + flow tracking endpoint)
 - [x] Integration test suite ✅ (ProjectControllerTest contract tests)
 - [x] Error handling & retry logic ✅ (DLQ in EventConsumer, circuit breaker in Auto-BADS)
-- [ ] Runtime E2E validation (requires services running)
+- [ ] Runtime E2E validation → deferred to M12 (requires services running)
 
-### 🔲 M9 — Real LLM Integration (Target: May 2026)
+### ✅ M9 — Real LLM Integration (April 2026)
 - [x] Replace MockLLMClient with real providers ✅ (OpenAICompatibleClient)
 - [x] Multi-provider support ✅ (LMStudio, Ollama, OpenAI via single client)
 - [x] Token usage tracking & cost management ✅ (built into client)
-- [ ] Prompt management system
-- [ ] Runtime validation (requires LMStudio running)
+- [ ] Prompt management system → deferred to post-v1.0
+- [ ] Runtime validation → deferred to M12 (requires LMStudio running)
 
-### 🔲 M10 — API Gateway & Service Mesh (Target: June 2026)
+### ✅ M10 — API Gateway & Service Mesh (April 2026)
 - [x] Traefik API gateway ✅ (docker-compose.gateway.yml)
 - [x] Service discovery ✅ (Docker labels-based routing)
 - [x] Rate limiting & auth (API key + forwardAuth) ✅
 - [x] Inter-service communication hardening ✅ (circuit breaker, retry, security headers)
-- [ ] JWT/OAuth2 (deferred to M11 production hardening)
+- [ ] JWT/OAuth2 → deferred to M12 production hardening
 
-### 🔲 M11 — Production Hardening (Target: July 2026)
+### ✅ M11 — Production Hardening (April 2026)
 - [x] Security audit (OWASP Top 10) ✅ (CVE scan + OWASP dependency-check in CI)
 - [x] CVE remediation ✅ (postgresql, kafka-clients, assertj-core fixed)
-- [ ] PII encryption (AES-256)
+- [x] Config alignment with ~/infra/onboarding.md ✅ (ports, credentials, shared infra)
 - [x] K8s deployment manifests (started)
 - [x] Disaster recovery ✅ (phoenix-backup.sh + lazarus-restore.sh)
-- [ ] Load testing & performance tuning
 - [x] Logging aggregation ✅ (JSON structured logging, ELK/Loki ready)
+- [x] **Sprint Demo M7–M11** ✅ (see docs/SPRINT_DEMO_M7_M11.md)
+- [ ] PII encryption (AES-256) → M12
+- [ ] Load testing & performance tuning → M12
 
-### 🔲 M12 — v1.0 Release (Target: August 2026)
-- [ ] Feature freeze
-- [ ] Documentation review
+### 🔲 M12 — v1.0 Release (Target: May 2026)
+- [ ] Runtime E2E validation (start shared infra, run integration tests)
+- [ ] PII encryption (AES-256 for sensitive fields)
+- [ ] Load testing & performance tuning
+- [ ] Feature freeze & code review
+- [ ] Documentation review & consolidation
 - [ ] User acceptance testing
 - [ ] Production deployment
 

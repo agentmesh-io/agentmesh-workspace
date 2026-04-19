@@ -1,23 +1,54 @@
 version: '3.8'
 
+# Shared Infrastructure for AgentMesh Venture
+# Per ~/infra/onboarding.md: Use shared ports (5435 PG, 6381 Redis)
+# Logical isolation via CREATE DATABASE on shared containers
+
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: agentmesh-postgres
+    container_name: dev-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+      - ./scripts/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    networks:
+      - global-infra
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+    labels:
+      - "traefik.enable=false"
+
+  redis:
+    image: redis:7-alpine
+    container_name: dev-redis
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - global-infra
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "traefik.enable=false"
 
 volumes:
   postgres_data:
+  redis_data:
+
+networks:
+  global-infra:
+    name: global-infra
+    driver: bridge
