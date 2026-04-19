@@ -9,7 +9,7 @@ CREATE DATABASE agentmesh_test;
 CREATE DATABASE autobads_test;
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE agentmesh TO postgres;
-GRANT ALL PRIVILEGES ON DATABASE autobads TO postgres;
-GRANT ALL PRIVILEGES ON DATABASE agentmesh_test TO postgres;
-GRANT ALL PRIVILEGES ON DATABASE autobads_test TO postgres;
+GRANT ALL PRIVILEGES ON DATABASE agentmesh TO admin;
+GRANT ALL PRIVILEGES ON DATABASE autobads TO admin;
+GRANT ALL PRIVILEGES ON DATABASE agentmesh_test TO admin;
+GRANT ALL PRIVILEGES ON DATABASE autobads_test TO admin;
