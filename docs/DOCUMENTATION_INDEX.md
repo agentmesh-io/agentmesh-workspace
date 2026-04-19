@@ -9,51 +9,34 @@
 
 ### For Executives & Stakeholders
 → **[EXECUTIVE_SUMMARY.md](./EXECUTIVE_SUMMARY.md)**
-   - Business value proposition
-   - Investment requirements
-   - ROI projections
-   - Market opportunity
-   - Risk assessment
+   - Business value proposition, ROI, market opportunity
+→ **[RELEASE_NOTES_v1.0.md](./RELEASE_NOTES_v1.0.md)**
+   - Complete feature summary for v1.0.0
 
 ### For Project Managers
-→ **[UPDATED_DEVELOPMENT_PLAN.md](./UPDATED_DEVELOPMENT_PLAN.md)** ⭐ NEW
-   - Current 10-week roadmap
-   - Gap analysis & priorities
-   - Immediate next steps
-   - Resource requirements
-   - Risk mitigation
-
-→ **[COMPREHENSIVE_DEVELOPMENT_PLAN.md](./COMPREHENSIVE_DEVELOPMENT_PLAN.md)** (Archived)
-   - Original 14-week roadmap
-   - Phase-by-phase breakdown
-   - Historical reference
+→ **[ROADMAP.md](./ROADMAP.md)** ⭐ PRIMARY
+   - Milestone tracking (M1–M12)
+   - Current status and next steps
+→ **[SPRINT_DEMO_M7_M11.md](./SPRINT_DEMO_M7_M11.md)**
+   - Sprint verification protocol with UAT scenarios
 
 ### For Developers
-→ **[QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md)**
-   - Setup instructions
-   - Local development
-   - Common issues & solutions
-   - Testing procedures
-   - Contribution guidelines
-
-→ **[NEXT_DEVELOPMENT_STEPS.md](./NEXT_DEVELOPMENT_STEPS.md)** ⭐ NEW
-   - Actionable next steps
-   - Ollama local LLM setup
-   - End-to-end flow tasks
-   - Production checklist
-
-→ **[setup-ollama.sh](./setup-ollama.sh)** ⭐ NEW
-   - One-command local LLM setup
-   - Installs Ollama + models
-   - Usage: `./setup-ollama.sh`
+→ **[SPRINT_DEMO_M7_M11.md](./SPRINT_DEMO_M7_M11.md)** §1–§2
+   - How to run all services
+   - Environment setup and seed data
+→ **[GIT_VERSIONING_STRATEGY.md](./GIT_VERSIONING_STRATEGY.md)**
+   - Branch strategy, tagging, GitHub workflow
+→ **[API_GATEWAY_GUIDE.md](./API_GATEWAY_GUIDE.md)**
+   - Traefik routing, rate limiting, auth
 
 ### For Architects & Technical Leads
 → **[VISUAL_ROADMAP.md](./VISUAL_ROADMAP.md)**
    - System architecture diagrams
    - Integration patterns
-   - Data flow visualization
    - Security architecture
    - Observability stack
+→ **[PROJECT_ANALYSIS_REPORT.md](./PROJECT_ANALYSIS_REPORT.md)**
+   - Stack analysis, risk assessment
 
 ---
 

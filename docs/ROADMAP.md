@@ -102,13 +102,18 @@
 - [ ] Load testing & performance tuning → M12
 
 ### 🔲 M12 — v1.0 Release (Target: May 2026)
+#### Phase A — Offline (Complete ✅)
+- [x] PII encryption (AES-256-GCM) ✅ (AesEncryptAttributeConverter + Tenant entity + V8 migration)
+- [x] Load test scripts ✅ (k6 with smoke/load/stress profiles)
+- [x] Feature freeze & code review ✅ (TODO audit, version bump to 1.0.0-RC1)
+- [x] Documentation review & consolidation ✅ (archived 5 stale docs, updated index)
+- [x] Release notes ✅ (RELEASE_NOTES_v1.0.md)
+
+#### Phase B — Runtime (Requires shared infra)
 - [ ] Runtime E2E validation (start shared infra, run integration tests)
-- [ ] PII encryption (AES-256 for sensitive fields)
-- [ ] Load testing & performance tuning
-- [ ] Feature freeze & code review
-- [ ] Documentation review & consolidation
+- [ ] Load testing execution & performance tuning
 - [ ] User acceptance testing
-- [ ] Production deployment
+- [ ] Tag v1.0.0 & production deployment
 
 ---
 
@@ -129,6 +134,7 @@
 
 - [Git Versioning Strategy](./GIT_VERSIONING_STRATEGY.md)
 - [Project Analysis Report](./PROJECT_ANALYSIS_REPORT.md)
-- [Updated Development Plan](./UPDATED_DEVELOPMENT_PLAN.md)
+- [Sprint Demo M7–M11](./SPRINT_DEMO_M7_M11.md)
+- [Release Notes v1.0](./RELEASE_NOTES_v1.0.md)
 - [Visual Roadmap](./VISUAL_ROADMAP.md)
 
