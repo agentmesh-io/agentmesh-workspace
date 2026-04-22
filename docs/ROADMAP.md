@@ -9,9 +9,9 @@
 
 | Project | Version | Stage | Health |
 |---------|---------|-------|--------|
-| **AgentMesh** (Backend) | v0.5.0 | ~95% feature-complete | 🟢 Merged, tagged, pushed to GitHub |
-| **AgentMesh-UI** (Frontend) | v0.3.0 | ~90% feature-complete | 🟢 Committed, tagged, pushed to GitHub |
-| **Auto-BADS** (Analysis) | v0.9.0 | ~98% feature-complete | 🟢 Committed, tagged, pushed to GitHub |
+| **AgentMesh** (Backend) | **v1.0.0** | Released | 🟢 [Genesis release](https://github.com/agentmesh-io/agentmesh/releases/tag/v1.0.0) |
+| **AgentMesh-UI** (Frontend) | v0.3.0 | ~90 % feature-complete | 🟡 Live UI target: M13.1 |
+| **Auto-BADS** (Analysis) | v1.0.0-RC1 | ~98 % (127/128 tests) | 🟡 GA target: M13.2 |
 
 ---
 
@@ -116,6 +116,14 @@
 - [x] Gateway E2E validation ✅ (routed via shared dev-traefik; Happy/Edge/Fail 6/6 PASS; rate-limit 429 enforced; see GATEWAY_E2E_REPORT_M12.md)
 - [x] User acceptance testing ✅ (20/20 PASS via gateway; project init, workflow start, blackboard persistence, 14 MAST failure modes; see UAT_REPORT_M12.md)
 - [x] Tag v1.0.0 & production deployment ✅ (AgentMesh/pom.xml 1.0.0-RC1 → 1.0.0, annotated tag v1.0.0, GitHub release published)
+
+### 🔲 M13 — Post-1.0 Adoption Train (v1.1 target, ~6 weeks)
+
+See **[ROADMAP_M13.md](./ROADMAP_M13.md)** for the full plan.
+
+- **Sprint 13.1 — Live UI** (2w): WebSocket stream → ReactFlow dashboard, Blackboard timeline, MAST toasts, `app.agentmesh.localhost` route.
+- **Sprint 13.2 — AuthN/Z + Auto-BADS GA** (2w): OAuth2/JWT at Traefik edge, RBAC, Auto-BADS fixes last test and cuts v1.0.0.
+- **Sprint 13.3 — Packaging + Demo Day** (2w): Helm chart, hardened K8s manifests, `make demo`, screencast, **tag v1.1.0**.
 
 ---
 

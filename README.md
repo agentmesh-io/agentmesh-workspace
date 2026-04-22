@@ -1,10 +1,10 @@
 # 🚀 Multi-Autonomous Agent System
 ## From Idea to Production Code in 30 Minutes
 
-[![Status](https://img.shields.io/badge/Status-95%25%20Complete-yellow)]()
+[![Status](https://img.shields.io/badge/AgentMesh-v1.0.0%20Released-brightgreen)](https://github.com/agentmesh-io/agentmesh/releases/tag/v1.0.0)
 [![AgentMesh](https://img.shields.io/badge/AgentMesh-Production%20Ready-green)]()
 [![UI](https://img.shields.io/badge/UI-Operational-green)]()
-[![Auto--BADS](https://img.shields.io/badge/Auto--BADS-95%25-yellow)]()
+[![Auto--BADS](https://img.shields.io/badge/Auto--BADS-1.0.0--RC1-yellow)]()
 [![License](https://img.shields.io/badge/License-Proprietary-blue)]()
 
 ---
@@ -116,28 +116,27 @@ cd Auto-BADS && mvn spring-boot:run
 
 ## 🎯 Current Status
 
-| Component | Status | Completion | Tests | Production Ready |
-|-----------|--------|------------|-------|------------------|
-| **AgentMesh** | ✅ Complete | 100% | 56/56 pass | **YES** |
-| **AgentMesh-UI** | ✅ Complete | 100% | All passing | **YES** |
-| **Auto-BADS** | ⚠️ Near Complete | 98% | 127/128 (99.2%) | Almost |
-| **Integration** | 🔄 In Progress | 60% | Kafka working | Partial |
+**AgentMesh v1.0.0 — "Genesis" — released 2026-04-22** 🚀  
+See the [announcement](./docs/RELEASE_ANNOUNCEMENT_v1.0.md) and [release notes](./docs/RELEASE_NOTES_v1.0.md).
 
-### What's Working ✅
-- ✅ AgentMesh: All phases complete (Plan, Code, Test, Review, Export)
-- ✅ MAST: 14 failure modes detection working
-- ✅ Kafka: Event publishing/consuming operational
-- ✅ Weaviate: Vector memory with semantic search
-- ✅ GitHub: Export and VS Code web integration
-- ✅ UI: All dashboards, Monaco editor, workflow visualization
+| Component | Version | Status | Tests | Production Ready |
+|-----------|---------|--------|-------|------------------|
+| **AgentMesh** | **v1.0.0** | ✅ Released | 96/96 pass (5 skipped Ollama) | **YES** |
+| **AgentMesh-UI** | v0.3.0 | ✅ Operational | All passing | YES (static) |
+| **Auto-BADS** | v1.0.0-RC1 | ⚠️ 98 % — 1 test remaining | 127/128 (99.2 %) | Target: M13.2 |
 
-### Critical Gaps 🔴
-- ⚠️ Real LLM disabled (using MockLLMClient)
-- ⚠️ SRS data not parsed/utilized in code generation
-- ⚠️ End-to-end flow (Idea → Code) not fully tested
-- ⚠️ Authentication not implemented
+### v1.0 Acceptance evidence (live hardware)
+- ⚡ Load: **p95 = 12.96 ms** @ 100 VUs, **0 / 13 401** failures (38× headroom)
+- 🌐 Gateway E2E: **6/6** scenarios (routing, CORS, rate-limit 429 enforced)
+- ✅ UAT: **20/20** assertions via `api.agentmesh.localhost`
 
-**See:** [UPDATED_DEVELOPMENT_PLAN.md](./UPDATED_DEVELOPMENT_PLAN.md) for detailed gap analysis
+Full reports: [LOAD_TEST_REPORT_M12.md](./docs/LOAD_TEST_REPORT_M12.md) · [GATEWAY_E2E_REPORT_M12.md](./docs/GATEWAY_E2E_REPORT_M12.md) · [UAT_REPORT_M12.md](./docs/UAT_REPORT_M12.md)
+
+### What's next (M13 / v1.1 — see [ROADMAP_M13.md](./docs/ROADMAP_M13.md))
+- 🎨 Live workflow visualisation (WebSocket + ReactFlow)
+- 🔐 OAuth2/JWT at the gateway edge
+- 🧩 Auto-BADS GA (1.0.0)
+- ☸️ Helm chart + demo-day
 
 ---
 
