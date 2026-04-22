@@ -69,12 +69,12 @@ done
 
 echo ""
 echo "📊 AgentMesh Service Status:"
-check_service "PostgreSQL" 5432
+check_service "PostgreSQL (shared dev-postgres)" 5435
 check_service "Kafka" 9092
-check_service "Weaviate" 8081
+check_service "Weaviate" 18086
 check_service "Temporal" 7233
-check_service "Redis" 6379
-check_service "AgentMesh API" 8080
+check_service "Redis (shared dev-redis)" 6381
+check_service "AgentMesh API" 8081
 
 echo ""
 
@@ -102,9 +102,9 @@ if [ $? -eq 0 ]; then
     echo "════════════════════════════════════════════════════════"
     echo ""
     echo "📊 Service URLs:"
-    echo "  AgentMesh API:  http://localhost:8080"
+    echo "  AgentMesh API:  http://localhost:8081"
     echo "  Auto-BADS API:  http://localhost:8083"
-    echo "  Weaviate:       http://localhost:8081"
+    echo "  Weaviate:       http://localhost:18086"
     echo "  Temporal UI:    http://localhost:8082"
     echo "  Grafana:        http://localhost:3000"
     echo "  Prometheus:     http://localhost:9090"

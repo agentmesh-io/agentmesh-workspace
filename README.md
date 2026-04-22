@@ -65,8 +65,8 @@ cd Auto-BADS && mvn spring-boot:run
 ```
 
 **Access Points:**
-- AgentMesh: http://localhost:8080
-- Auto-BADS: http://localhost:8081
+- AgentMesh: http://localhost:8081
+- Auto-BADS: http://localhost:8083
 - Ollama: http://localhost:11434
 - UI: http://localhost:3000
 
@@ -100,7 +100,7 @@ cd Auto-BADS && mvn spring-boot:run
                 │                         │
 ┌───────────────▼──────────┐  ┌──────────▼─────────────┐
 │      Auto-BADS           │  │    AgentMesh (ASEM)    │
-│      (Port 8081)         │  │    (Port 8080)         │
+│      (Port 8081)         │  │    (Port 8081)         │
 │                          │  │                         │
 │  Idea → Analysis →       │──┤→ Code → Test → Deploy  │
 │  Blueprint               │  │                         │

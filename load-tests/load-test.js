@@ -56,7 +56,7 @@ export const options = {
 };
 
 // ─── Configuration ──────────────────────────────────────────────
-const AGENTMESH_URL = __ENV.AGENTMESH_URL || 'http://localhost:8080';
+const AGENTMESH_URL = __ENV.AGENTMESH_URL || 'http://localhost:8081';
 const AUTOBADS_URL = __ENV.AUTOBADS_URL || 'http://localhost:8083';
 
 const headers = {

@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
 
   # ═══════════════════════════════════════════════════════════
-  # AgentMesh Backend (Spring Boot) — Port 8080
+  # AgentMesh Backend (Spring Boot) — Port 8081
   # Route: api.localhost
   # ═══════════════════════════════════════════════════════════
   agentmesh-api:
@@ -55,7 +55,7 @@ services:
       # Main API router
       - "traefik.http.routers.agentmesh-api.rule=Host(`api.localhost`)"
       - "traefik.http.routers.agentmesh-api.entrypoints=web"
-      - "traefik.http.services.agentmesh-api.loadbalancer.server.port=8080"
+      - "traefik.http.services.agentmesh-api.loadbalancer.server.port=8081"
       # Rate limiting
       - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
       - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=50"
@@ -100,7 +100,7 @@ services:
     container_name: agentmesh-autobads
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - AGENTMESH_API_URL=http://agentmesh-api:8080
+      - AGENTMESH_API_URL=http://agentmesh-api:8081
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.auto-bads.rule=Host(`bads.localhost`)"

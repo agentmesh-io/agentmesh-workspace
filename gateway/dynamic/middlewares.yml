@@ -18,7 +18,7 @@ http:
     # JWT Auth middleware (for protected routes)
     jwt-auth:
       forwardAuth:
-        address: "http://agentmesh-api:8080/api/auth/verify"
+        address: "http://agentmesh-api:8081/api/auth/verify"
         authResponseHeaders:
           - "X-User-Id"
           - "X-Tenant-Id"

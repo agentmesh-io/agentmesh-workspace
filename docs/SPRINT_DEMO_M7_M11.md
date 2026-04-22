@@ -329,10 +329,10 @@ cat AgentMesh/src/main/resources/logback-spring.xml | grep -i "json\|structured"
 | Test DB suffix `_test` | ✅ `init-databases.sql` → agentmesh_test, autobads_test | ✅ | 🟢 |
 | LMStudio on :1234 | ✅ `application.yml` → localhost:1234/v1 | ⚠️ Uses Ollama directly (acceptable — Spring AI) | 🟡 |
 | AgentMesh URL :8081 | N/A | ✅ `application.yml` → localhost:8081 | 🟢 |
-| Java port 8081-8100 | ⚠️ AgentMesh runs on 8080 (server.port) | ✅ 8083 | 🟡 |
+| Java port 8081-8100 | ✅ AgentMesh runs on 8081 (server.port) | ✅ 8083 | 🟢 |
 
 ### Port Compliance Note
-AgentMesh `server.port=8080` in default/dev profiles. Per Architect Protocol §8, Java services should use 8081-8100. However, the existing deployment has 8080 as the internal container port with external mapping via Traefik/Docker. This is acceptable for the API gateway pattern where Traefik maps `api.localhost:80 → :8080`. No change required unless running bare-metal without gateway.
+AgentMesh `server.port=8081` in all profiles (default, dev, prod). Per Architect Protocol §8, Java services use 8081-8100. ✅ Fully compliant.
 
 ---
 
@@ -351,7 +351,7 @@ AgentMesh `server.port=8080` in default/dev profiles. Per Architect Protocol §8
 
 ┌─────────────── Application Services ────────────────┐
 │                                                      │
-│  AgentMesh API (:8080)     → Spring Boot 3.5 / JDK22│
+│  AgentMesh API (:8081)     → Spring Boot 3.5 / JDK22│
 │  Auto-BADS    (:8083)      → Spring Boot 3.5 / JDK22│
 │  AgentMesh UI (:5173 dev)  → Next.js 16 / React 19  │
 │                                                      │
@@ -359,7 +359,7 @@ AgentMesh `server.port=8080` in default/dev profiles. Per Architect Protocol §8
 
 ┌─────────────── API Gateway (Traefik v3.1) ──────────┐
 │                                                      │
-│  api.localhost  → agentmesh-api:8080                 │
+│  api.localhost  → agentmesh-api:8081                 │
 │  app.localhost  → agentmesh-ui:3000                  │
 │  bads.localhost → auto-bads:8083                     │
 │  traefik.localhost → dashboard                       │
