@@ -1,7 +1,7 @@
 # 🗺️ AgentMesh Platform — ROADMAP
 
-**Last Updated:** April 19, 2026 (Sprint Demo M7–M11 complete, M12 started)  
-**Status:** Active Development — v1.0 Release Phase
+**Last Updated:** April 22, 2026 (M12 Phase B complete — **v1.0.0 SHIPPED** 🚀)  
+**Status:** Released — v1.0.0
 
 ---
 
@@ -115,7 +115,7 @@
 - [x] Load testing execution & performance tuning ✅ (k6 smoke+load PASSED; p95=12.96ms @ 100 VUs, 0 errors/13 401 req; see LOAD_TEST_REPORT_M12.md)
 - [x] Gateway E2E validation ✅ (routed via shared dev-traefik; Happy/Edge/Fail 6/6 PASS; rate-limit 429 enforced; see GATEWAY_E2E_REPORT_M12.md)
 - [x] User acceptance testing ✅ (20/20 PASS via gateway; project init, workflow start, blackboard persistence, 14 MAST failure modes; see UAT_REPORT_M12.md)
-- [ ] Tag v1.0.0 & production deployment
+- [x] Tag v1.0.0 & production deployment ✅ (AgentMesh/pom.xml 1.0.0-RC1 → 1.0.0, annotated tag v1.0.0, GitHub release published)
 
 ---
 

@@ -1,8 +1,18 @@
 # 🚀 AgentMesh Platform — Release Notes v1.0.0
 
-**Release Date:** TBD (Post-UAT)  
+**Release Date:** 2026-04-22 ✅  
 **Code Name:** Genesis  
-**Status:** Release Candidate
+**Status:** **Released** — tag `v1.0.0`
+
+### M12 Phase B Acceptance Evidence
+
+| Task | Result | Report |
+|------|--------|--------|
+| Runtime E2E validation | ✅ All endpoints verified against shared Postgres | [E2E_VALIDATION_REPORT.md](./E2E_VALIDATION_REPORT.md) |
+| Port alignment to Protocol §8 | ✅ AgentMesh on :8081 | commit `7f68488` |
+| Load testing | ✅ **p95=12.96 ms @ 100 VUs, 0 errors / 13 401 req (38× headroom)** | [LOAD_TEST_REPORT_M12.md](./LOAD_TEST_REPORT_M12.md) |
+| Gateway E2E | ✅ **6/6 scenarios PASS**, rate-limit 429 enforced | [GATEWAY_E2E_REPORT_M12.md](./GATEWAY_E2E_REPORT_M12.md) |
+| UAT full-flow | ✅ **20/20 PASS** via gateway (project→workflow→blackboard→MAST) | [UAT_REPORT_M12.md](./UAT_REPORT_M12.md) |
 
 ---
 
