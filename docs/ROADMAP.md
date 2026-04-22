@@ -114,7 +114,7 @@
 - [x] Port alignment to Protocol §8 ✅ (AgentMesh on :8081 — commit 7f68488)
 - [x] Load testing execution & performance tuning ✅ (k6 smoke+load PASSED; p95=12.96ms @ 100 VUs, 0 errors/13 401 req; see LOAD_TEST_REPORT_M12.md)
 - [x] Gateway E2E validation ✅ (routed via shared dev-traefik; Happy/Edge/Fail 6/6 PASS; rate-limit 429 enforced; see GATEWAY_E2E_REPORT_M12.md)
-- [ ] User acceptance testing (Create project → Agent orchestration → Blackboard → MAST)
+- [x] User acceptance testing ✅ (20/20 PASS via gateway; project init, workflow start, blackboard persistence, 14 MAST failure modes; see UAT_REPORT_M12.md)
 - [ ] Tag v1.0.0 & production deployment
 
 ---
