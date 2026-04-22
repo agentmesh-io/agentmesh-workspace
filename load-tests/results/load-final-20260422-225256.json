@@ -1,0 +1,208 @@
+{
+    "metrics": {
+        "http_reqs": {
+            "count": 13401,
+            "rate": 222.51614670045714
+        },
+        "http_req_tls_handshaking": {
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "iteration_duration": {
+            "avg": 762.5671603203498,
+            "min": 507.889208,
+            "med": 761.176041,
+            "max": 1084.162208,
+            "p(90)": 960.9538416,
+            "p(95)": 987.5570373999999
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 13401,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "vus": {
+            "min": 4,
+            "max": 99,
+            "value": 4
+        },
+        "http_req_duration": {
+            "p(90)": 9.504,
+            "p(95)": 12.961,
+            "avg": 4.240779344824993,
+            "min": 0.584,
+            "med": 2.072,
+            "max": 109.483,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        },
+        "errors": {
+            "passes": 0,
+            "fails": 13401,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "checks": {
+            "fails": 0,
+            "passes": 22335,
+            "value": 1
+        },
+        "data_sent": {
+            "count": 1143552,
+            "rate": 18988.044518439012
+        },
+        "http_req_blocked": {
+            "avg": 0.014661517797181703,
+            "min": 0,
+            "med": 0.001,
+            "max": 18.03,
+            "p(90)": 0.003,
+            "p(95)": 0.004
+        },
+        "http_req_sending": {
+            "med": 0.004,
+            "max": 0.184,
+            "p(90)": 0.01,
+            "p(95)": 0.014,
+            "avg": 0.005855757033057407,
+            "min": 0.001
+        },
+        "data_received": {
+            "count": 599918576,
+            "rate": 9961314.071005547
+        },
+        "http_req_waiting": {
+            "med": 1.995,
+            "max": 109.145,
+            "p(90)": 8.959,
+            "p(95)": 12.324,
+            "avg": 4.019876949481386,
+            "min": 0.575
+        },
+        "http_req_receiving": {
+            "max": 40.761,
+            "p(90)": 0.604,
+            "p(95)": 0.718,
+            "avg": 0.2150466383105743,
+            "min": 0.005,
+            "med": 0.074
+        },
+        "group_duration": {
+            "max": 109.684792,
+            "p(90)": 8.2933205,
+            "p(95)": 11.6215558,
+            "avg": 3.2349229650212434,
+            "min": 0.000125,
+            "med": 1.6028125
+        },
+        "iterations": {
+            "count": 4467,
+            "rate": 74.17204890015239
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 12.961,
+            "avg": 4.240779344824993,
+            "min": 0.584,
+            "med": 2.072,
+            "max": 109.483,
+            "p(90)": 9.504
+        },
+        "http_req_connecting": {
+            "avg": 0.012416983807178573,
+            "min": 0,
+            "med": 0,
+            "max": 17.66,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "vus_max": {
+            "max": 100,
+            "value": 100,
+            "min": 100
+        }
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "AgentMesh Health": {
+                "path": "::AgentMesh Health",
+                "id": "9b108ce66aa888f9f1bf335955d0c0bf",
+                "groups": {},
+                "checks": {
+                        "AgentMesh health status 200": {
+                            "id": "36f19c10b61b8b06bd258f781ced8c2a",
+                            "passes": 4467,
+                            "fails": 0,
+                            "name": "AgentMesh health status 200",
+                            "path": "::AgentMesh Health::AgentMesh health status 200"
+                        },
+                        "AgentMesh health body contains UP": {
+                            "name": "AgentMesh health body contains UP",
+                            "path": "::AgentMesh Health::AgentMesh health body contains UP",
+                            "id": "864d6e99e030621e8500055a76b96fb8",
+                            "passes": 4467,
+                            "fails": 0
+                        }
+                    },
+                "name": "AgentMesh Health"
+            },
+            "AgentMesh Project Initialize": {
+                "name": "AgentMesh Project Initialize",
+                "path": "::AgentMesh Project Initialize",
+                "id": "4c9c254c11fae8312b78e9bbce860b58",
+                "groups": {},
+                "checks": {}
+            },
+            "AgentMesh Project List": {
+                "path": "::AgentMesh Project List",
+                "id": "de5c26921f54b703674ad5e3677b857a",
+                "groups": {},
+                "checks": {
+                        "Project list 200": {
+                            "passes": 4467,
+                            "fails": 0,
+                            "name": "Project list 200",
+                            "path": "::AgentMesh Project List::Project list 200",
+                            "id": "6b4e9d0ca614f11ee79f0db37db72fbb"
+                        }
+                    },
+                "name": "AgentMesh Project List"
+            },
+            "AgentMesh Metrics": {
+                "path": "::AgentMesh Metrics",
+                "id": "1165e25b7139bfe07f1a28902ac60485",
+                "groups": {},
+                "checks": {
+                        "Prometheus metrics 200": {
+                            "name": "Prometheus metrics 200",
+                            "path": "::AgentMesh Metrics::Prometheus metrics 200",
+                            "id": "c8f4fe56543bd592c339399b8cfbe327",
+                            "passes": 4467,
+                            "fails": 0
+                        },
+                        "Metrics contain JVM info": {
+                            "id": "394a601269de7bf9efc61cf9bea56fb1",
+                            "passes": 4467,
+                            "fails": 0,
+                            "name": "Metrics contain JVM info",
+                            "path": "::AgentMesh Metrics::Metrics contain JVM info"
+                        }
+                    },
+                "name": "AgentMesh Metrics"
+            }
+        },
+        "checks": {}
+    }
+}

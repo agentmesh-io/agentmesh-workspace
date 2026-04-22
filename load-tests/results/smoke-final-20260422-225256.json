@@ -1,0 +1,208 @@
+{
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "AgentMesh Health": {
+                "name": "AgentMesh Health",
+                "path": "::AgentMesh Health",
+                "id": "9b108ce66aa888f9f1bf335955d0c0bf",
+                "groups": {},
+                "checks": {
+                        "AgentMesh health status 200": {
+                            "passes": 205,
+                            "fails": 0,
+                            "name": "AgentMesh health status 200",
+                            "path": "::AgentMesh Health::AgentMesh health status 200",
+                            "id": "36f19c10b61b8b06bd258f781ced8c2a"
+                        },
+                        "AgentMesh health body contains UP": {
+                            "fails": 0,
+                            "name": "AgentMesh health body contains UP",
+                            "path": "::AgentMesh Health::AgentMesh health body contains UP",
+                            "id": "864d6e99e030621e8500055a76b96fb8",
+                            "passes": 205
+                        }
+                    }
+            },
+            "AgentMesh Project Initialize": {
+                "name": "AgentMesh Project Initialize",
+                "path": "::AgentMesh Project Initialize",
+                "id": "4c9c254c11fae8312b78e9bbce860b58",
+                "groups": {},
+                "checks": {}
+            },
+            "AgentMesh Project List": {
+                "name": "AgentMesh Project List",
+                "path": "::AgentMesh Project List",
+                "id": "de5c26921f54b703674ad5e3677b857a",
+                "groups": {},
+                "checks": {
+                        "Project list 200": {
+                            "path": "::AgentMesh Project List::Project list 200",
+                            "id": "6b4e9d0ca614f11ee79f0db37db72fbb",
+                            "passes": 205,
+                            "fails": 0,
+                            "name": "Project list 200"
+                        }
+                    }
+            },
+            "AgentMesh Metrics": {
+                "checks": {
+                    "Prometheus metrics 200": {
+                        "name": "Prometheus metrics 200",
+                        "path": "::AgentMesh Metrics::Prometheus metrics 200",
+                        "id": "c8f4fe56543bd592c339399b8cfbe327",
+                        "passes": 205,
+                        "fails": 0
+                    },
+                    "Metrics contain JVM info": {
+                        "name": "Metrics contain JVM info",
+                        "path": "::AgentMesh Metrics::Metrics contain JVM info",
+                        "id": "394a601269de7bf9efc61cf9bea56fb1",
+                        "passes": 205,
+                        "fails": 0
+                    }
+                },
+                "name": "AgentMesh Metrics",
+                "path": "::AgentMesh Metrics",
+                "id": "1165e25b7139bfe07f1a28902ac60485",
+                "groups": {}
+            }
+        },
+        "checks": {},
+        "name": "",
+        "path": ""
+    },
+    "metrics": {
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 615,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "iterations": {
+            "count": 205,
+            "rate": 5.071714036475767
+        },
+        "http_req_blocked": {
+            "max": 13.931,
+            "p(90)": 0.005,
+            "p(95)": 0.008,
+            "avg": 0.037128455284552865,
+            "min": 0,
+            "med": 0.002
+        },
+        "iteration_duration": {
+            "p(90)": 962.4726670000001,
+            "p(95)": 1002.642125,
+            "avg": 764.8598772390246,
+            "min": 520.147375,
+            "med": 786.530292,
+            "max": 1057.446208
+        },
+        "http_req_receiving": {
+            "med": 0.151,
+            "max": 3.627,
+            "p(90)": 0.5786,
+            "p(95)": 0.829199999999999,
+            "avg": 0.2927609756097562,
+            "min": 0.016
+        },
+        "http_req_duration": {
+            "avg": 8.904195121951215,
+            "min": 1.406,
+            "med": 4.294,
+            "max": 64.518,
+            "p(90)": 19.590600000000002,
+            "p(95)": 23.702099999999998,
+            "thresholds": {
+                "p(95)<1000": false
+            }
+        },
+        "errors": {
+            "fails": 615,
+            "passes": 0,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "http_reqs": {
+            "count": 615,
+            "rate": 15.215142109427303
+        },
+        "group_duration": {
+            "min": 0.000291,
+            "med": 3.4658335,
+            "max": 64.759917,
+            "p(90)": 18.83125,
+            "p(95)": 22.1182476,
+            "avg": 6.782873399999991
+        },
+        "vus": {
+            "value": 1,
+            "min": 1,
+            "max": 5
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_waiting": {
+            "avg": 8.597967479674788,
+            "min": 1.293,
+            "med": 4.121,
+            "max": 64.222,
+            "p(90)": 19.131200000000003,
+            "p(95)": 22.827799999999996
+        },
+        "data_received": {
+            "count": 27530291,
+            "rate": 681101.2843559146
+        },
+        "http_req_connecting": {
+            "avg": 0.03123577235772358,
+            "min": 0,
+            "med": 0,
+            "max": 12.877,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 23.702099999999998,
+            "avg": 8.904195121951215,
+            "min": 1.406,
+            "med": 4.294,
+            "max": 64.518,
+            "p(90)": 19.590600000000002
+        },
+        "checks": {
+            "passes": 1025,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_sending": {
+            "min": 0.001,
+            "med": 0.008,
+            "max": 1.203,
+            "p(90)": 0.02,
+            "p(95)": 0.028299999999999974,
+            "avg": 0.013466666666666618
+        },
+        "data_sent": {
+            "count": 52480,
+            "rate": 1298.3587933377964
+        },
+        "vus_max": {
+            "value": 5,
+            "min": 5,
+            "max": 5
+        }
+    }
+}

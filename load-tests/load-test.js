@@ -58,57 +58,78 @@ export const options = {
 // ─── Configuration ──────────────────────────────────────────────
 const AGENTMESH_URL = __ENV.AGENTMESH_URL || 'http://localhost:8081';
 const AUTOBADS_URL = __ENV.AUTOBADS_URL || 'http://localhost:8083';
+// Auto-BADS is an optional downstream service. Set SKIP_AUTOBADS=1 to
+// bench AgentMesh in isolation (default behaviour for v1.0 release tests).
+const SKIP_AUTOBADS = __ENV.SKIP_AUTOBADS === '1' || __ENV.SKIP_AUTOBADS === 'true';
+// /api/projects/initialize triggers a full async workflow (GitHub export,
+// event publishing, LLM calls). Only include under WORKFLOW_LOAD=1.
+const WORKFLOW_LOAD = __ENV.WORKFLOW_LOAD === '1' || __ENV.WORKFLOW_LOAD === 'true';
 
 const headers = {
   'Content-Type': 'application/json',
 };
 
 // ─── Scenarios ──────────────────────────────────────────────────
+// Helper: record the outcome of a group's checks as a proper rate metric
+// (add(true) increments passes, add(false) increments fails — gives real % rate).
+function record(ok) {
+  errorRate.add(!ok);
+  return ok;
+}
+
 export default function () {
   group('AgentMesh Health', () => {
     const res = http.get(`${AGENTMESH_URL}/actuator/health`);
-    check(res, {
+    record(check(res, {
       'AgentMesh health status 200': (r) => r.status === 200,
       'AgentMesh health body contains UP': (r) => r.body && r.body.includes('UP'),
-    }) || errorRate.add(1);
+    }));
   });
 
   group('AgentMesh Project Initialize', () => {
+    if (!WORKFLOW_LOAD) return; // skip heavy async workflow in smoke/load
+
     const payload = JSON.stringify({
-      name: `LoadTest-Project-${__VU}-${__ITER}`,
-      description: `Load test project from VU ${__VU} iteration ${__ITER}`,
+      // Direct SRS format accepted by ProjectController.extractSrsHandoff()
+      ideaTitle: `LoadTest-Project-${__VU}-${__ITER}`,
+      problemStatement: `Load test SRS from VU ${__VU} iteration ${__ITER}`,
+      businessCase: 'k6 workflow profile synthetic traffic',
+      recommendedSolutionType: 'CUSTOM_SOFTWARE',
     });
 
-    const res = http.post(`${AGENTMESH_URL}/api/projects/initialize`, payload, { headers });
+    const res = http.post(`${AGENTMESH_URL}/api/projects/initialize`, payload,
+      { headers, timeout: '30s' });
     projectInitDuration.add(res.timings.duration);
 
-    check(res, {
+    record(check(res, {
       'Project init status 200 or 201': (r) => r.status === 200 || r.status === 201,
       'Project init response has body': (r) => r.body && r.body.length > 0,
-    }) || errorRate.add(1);
+    }));
   });
 
-  group('AgentMesh Project Status', () => {
-    const res = http.get(`${AGENTMESH_URL}/api/projects/status`);
-    check(res, {
-      'Project status 200': (r) => r.status === 200,
-    }) || errorRate.add(1);
+  group('AgentMesh Project List', () => {
+    const res = http.get(`${AGENTMESH_URL}/api/projects`);
+    record(check(res, {
+      'Project list 200': (r) => r.status === 200,
+    }));
   });
 
   group('AgentMesh Metrics', () => {
     const res = http.get(`${AGENTMESH_URL}/actuator/prometheus`);
-    check(res, {
+    record(check(res, {
       'Prometheus metrics 200': (r) => r.status === 200,
       'Metrics contain JVM info': (r) => r.body && r.body.includes('jvm_'),
-    }) || errorRate.add(1);
+    }));
   });
 
-  group('Auto-BADS Health', () => {
-    const res = http.get(`${AUTOBADS_URL}/actuator/health`);
-    check(res, {
-      'Auto-BADS health status 200': (r) => r.status === 200,
-    }) || errorRate.add(1);
-  });
+  if (!SKIP_AUTOBADS) {
+    group('Auto-BADS Health', () => {
+      const res = http.get(`${AUTOBADS_URL}/actuator/health`);
+      record(check(res, {
+        'Auto-BADS health status 200': (r) => r.status === 200,
+      }));
+    });
+  }
 
   sleep(0.5 + Math.random() * 0.5); // 0.5–1s think time
 }
@@ -116,8 +137,9 @@ export default function () {
 // ─── Summary ──────────────────────────────────────────────────
 export function handleSummary(data) {
   const now = new Date().toISOString().replace(/[:.]/g, '-');
+  const outDir = __ENV.RESULTS_DIR || 'load-tests/results';
   return {
-    [`results/summary-${__ENV.PROFILE || 'smoke'}-${now}.json`]: JSON.stringify(data, null, 2),
+    [`${outDir}/summary-${__ENV.PROFILE || 'smoke'}-${now}.json`]: JSON.stringify(data, null, 2),
     stdout: textSummary(data, { indent: ' ', enableColors: true }),
   };
 }

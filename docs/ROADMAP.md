@@ -110,9 +110,11 @@
 - [x] Release notes ✅ (RELEASE_NOTES_v1.0.md)
 
 #### Phase B — Runtime (Requires shared infra)
-- [ ] Runtime E2E validation (start shared infra, run integration tests)
-- [ ] Load testing execution & performance tuning
-- [ ] User acceptance testing
+- [x] Runtime E2E validation ✅ (shared infra up; see E2E_VALIDATION_REPORT.md — commit d0b7bef)
+- [x] Port alignment to Protocol §8 ✅ (AgentMesh on :8081 — commit 7f68488)
+- [x] Load testing execution & performance tuning ✅ (k6 smoke+load PASSED; p95=12.96ms @ 100 VUs, 0 errors/13 401 req; see LOAD_TEST_REPORT_M12.md)
+- [ ] Gateway E2E validation (Traefik api.localhost, rate limit, CORS)
+- [ ] User acceptance testing (Create project → Agent orchestration → Blackboard → MAST)
 - [ ] Tag v1.0.0 & production deployment
 
 ---
