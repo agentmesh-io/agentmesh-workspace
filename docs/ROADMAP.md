@@ -1,7 +1,7 @@
 # 🗺️ AgentMesh Platform — ROADMAP
 
-**Last Updated:** April 22, 2026 (M12 Phase B complete — **v1.0.0 SHIPPED** 🚀)  
-**Status:** Released — v1.0.0
+**Last Updated:** April 26, 2026 (M13 Sprint 13.1 — Live UI streaming wired)  
+**Status:** Released — v1.0.0 · Active sprint: **M13.1 (Live UI)**
 
 ---
 
@@ -121,7 +121,15 @@
 
 See **[ROADMAP_M13.md](./ROADMAP_M13.md)** for the full plan.
 
-- **Sprint 13.1 — Live UI** (2w): WebSocket stream → ReactFlow dashboard, Blackboard timeline, MAST toasts, `app.agentmesh.localhost` route.
+- **Sprint 13.1 — Live UI** (2w, in progress 🟡):
+  - [x] Backend agent-status broadcast on every Planner/Architect/Developer/Tester/Reviewer transition (`WorkflowService`)
+  - [x] `LiveStreamBridge` Spring `@EventListener` → WebSocket for `BlackboardEntryPostedEvent`
+  - [x] `MASTViolationService.save()` → live `mast.violation` toast frames
+  - [x] UI native WebSocket client + `useWorkflowStream(workflowId)` hook (`lib/api/live-stream.ts`)
+  - [x] Traefik routes `app.agentmesh.localhost` + `api.agentmesh.localhost` (gateway)
+  - [x] Versioned test scenario: `docs/tests/M13.1-live-ui.md`
+  - [ ] ReactFlow node animation + Blackboard timeline component (UI page wiring)
+  - [ ] k6 latency probe < 500 ms p95 under `WORKFLOW_LOAD=1`
 - **Sprint 13.2 — AuthN/Z + Auto-BADS GA** (2w): OAuth2/JWT at Traefik edge, RBAC, Auto-BADS fixes last test and cuts v1.0.0.
 - **Sprint 13.3 — Packaging + Demo Day** (2w): Helm chart, hardened K8s manifests, `make demo`, screencast, **tag v1.1.0**.
 

@@ -23,13 +23,15 @@ AgentMesh v1.0 proved the engine runs under load. **M13 makes it usable by human
 ### Sprint 13.1 — **Live UI** (2 weeks)
 Goal: workflow visualisation in real time.
 
-- [ ] WebSocket bridge: Spring `/ws/workflow/{id}` → UI ReactFlow stream
-- [ ] Live agent-activity events (Planner/Coder/Tester state transitions)
-- [ ] Blackboard event stream → UI timeline component
-- [ ] MAST violation toasts in the dashboard
-- [ ] Register UI at `app.agentmesh.localhost` via shared Traefik
+- [x] WebSocket bridge: Spring `/ws` (`AgentMeshWebSocketHandler`) → UI native client (`lib/api/live-stream.ts`)
+- [x] Live agent-activity events (Planner/Architect/Developer/Tester/Reviewer state transitions broadcast from `WorkflowService`)
+- [x] Blackboard event stream → UI timeline (Spring `@EventListener` `LiveStreamBridge`)
+- [x] MAST violation toasts (`MASTViolationService.save()` broadcasts `mast.violation`)
+- [x] Register UI at `app.agentmesh.localhost` via shared Traefik (gateway routes both legacy `app.localhost` and `app.agentmesh.localhost`)
+- [x] Versioned test scenario `docs/tests/M13.1-live-ui.md` (Happy/Edge/Fail) — Protocol §4
+- [ ] Dashboard ReactFlow node animation + Blackboard timeline component (UI page wiring)
+- [ ] k6 latency probe to confirm <500 ms p95 under `WORKFLOW_LOAD=1`
 - **Acceptance:** Start a workflow from UI → see nodes light up within 500 ms of backend state change.
-- **Versioned test scenario (Protocol §4):** `docs/tests/M13.1-live-ui.md` with Happy/Edge/Fail.
 
 ### Sprint 13.2 — **AuthN/Z & Auto-BADS GA** (2 weeks)
 Goal: production-grade authentication + Auto-BADS 1.0.0 (drops the RC suffix).
