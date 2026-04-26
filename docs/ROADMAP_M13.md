@@ -31,8 +31,8 @@ Goal: workflow visualisation in real time.
 - [x] Versioned test scenario `docs/tests/M13.1-live-ui.md` (Happy/Edge/Fail) — Protocol §4
 - [x] Dashboard ReactFlow node animation + Blackboard timeline + MAST toasts (`app/dashboard/orchestration/page.tsx`)
 - [x] k6 WebSocket latency probe authored (`load-tests/ws-latency.js`)
-- [ ] Runtime execution: H1–H9 / E1–E7 / F1–F5 + k6 probe under `WORKFLOW_LOAD=1`
-- **Acceptance:** Start a workflow from UI → see nodes light up within 500 ms of backend state change.
+- [x] Runtime acceptance executed 2026-04-26 — first frame **+31 ms** (≪ 500 ms gate); evidence: `docs/ACCEPTANCE_M13.1.md`
+- **Acceptance:** ✅ Start a workflow → nodes light up within 500 ms of backend state change. **Sprint 13.1 DONE.**
 
 ### Sprint 13.2 — **AuthN/Z & Auto-BADS GA** (2 weeks)
 Goal: production-grade authentication + Auto-BADS 1.0.0 (drops the RC suffix).

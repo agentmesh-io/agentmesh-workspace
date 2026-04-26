@@ -45,11 +45,19 @@ services:
       dockerfile: Dockerfile
     container_name: agentmesh-api
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - LLM_PROVIDER=${LLM_PROVIDER:-}
+      # Local stage uses the shared dev infra (Protocol §1, §8): dev-postgres / dev-redis / LMStudio :1234
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+      - DB_HOST=${DB_HOST:-dev-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-agentmesh}
+      - DB_USER=${DB_USER:-admin}
+      - DB_PASSWORD=${DB_PASSWORD:-startup_password}
+      - SPRING_DATA_REDIS_HOST=${SPRING_DATA_REDIS_HOST:-dev-redis}
+      - SPRING_DATA_REDIS_PORT=${SPRING_DATA_REDIS_PORT:-6379}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai-compatible}
       - LLM_BASE_URL=${LLM_BASE_URL:-http://host.docker.internal:1234/v1}
       - LLM_API_KEY=${LLM_API_KEY:-}
-      - LLM_MODEL=${LLM_MODEL:-default}
+      - LLM_MODEL=${LLM_MODEL:-magnum-12b-v2}
     labels:
       - "traefik.enable=true"
       # Main API router (legacy + branded host)
@@ -66,6 +74,9 @@ services:
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowHeaders=Content-Type,Authorization,X-Tenant-Id"
     networks:
       - agentmesh-net
+      - global-infra
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   # ═══════════════════════════════════════════════════════════
@@ -118,4 +129,6 @@ services:
 networks:
   agentmesh-net:
     driver: bridge
+  global-infra:
+    external: true
 
