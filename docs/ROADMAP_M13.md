@@ -43,7 +43,7 @@ Goal: production-grade authentication + Auto-BADS 1.0.0 (drops the RC suffix).
 - [x] Auto-BADS fix remaining 1/128 test, ship v1.0.0 — tag `v1.0.0` cut 2026-04-26 (128 tests, 0 failures, 0 errors); fixes: graceful-degradation contract in `ErrorRecoveryTest` + Docker-gated `RedisCacheIntegrationTest`
 - [x] Single `Host(api.agentmesh.localhost) → /bads/*` path stripped to Auto-BADS (`docker-compose.gateway.yml` router `auto-bads-path` + `bads-stripprefix` middleware)
 - [x] UI auth wiring (login page, `/api/auth/{login,refresh,logout}` route handlers, `middleware.ts` redirect gate, `Authorization: Bearer` injection + 401 refresh-and-retry, WS `?token=` with reconnect on close 4401) — `agentmesh-io/agentmesh-ui@762235d`, `next build` clean
-- **Acceptance:** `k6` smoke profile passes with Authorization Bearer header; 401 without; Auto-BADS tag `v1.0.0` cut.
+- **Acceptance:** ✅ k6 auth-smoke green 2026-04-26 (bearer fail-rate `0`, none `1`, tampered `1`, p95 **313 ms** ≪ 500 ms gate); Auto-BADS `v1.0.0` tag cut. Evidence: [`docs/ACCEPTANCE_M13.2.md`](ACCEPTANCE_M13.2.md). Edge `jwt-auth@file` attachment + `AUTH_ENFORCED=true` flip ride to M13.3 to avoid breaking the v1.0 UAT lane mid-sprint (Risk R6).
 
 ### Sprint 13.3 — **Packaging & Demo Day** (2 weeks)
 Goal: install anywhere in ≤ 10 minutes.
