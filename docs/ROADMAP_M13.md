@@ -25,12 +25,13 @@ Goal: workflow visualisation in real time.
 
 - [x] WebSocket bridge: Spring `/ws` (`AgentMeshWebSocketHandler`) → UI native client (`lib/api/live-stream.ts`)
 - [x] Live agent-activity events (Planner/Architect/Developer/Tester/Reviewer state transitions broadcast from `WorkflowService`)
-- [x] Blackboard event stream → UI timeline (Spring `@EventListener` `LiveStreamBridge`)
+- [x] Blackboard event stream → UI timeline (Spring `@EventListener` `LiveStreamBridge` + 5 unit tests)
 - [x] MAST violation toasts (`MASTViolationService.save()` broadcasts `mast.violation`)
 - [x] Register UI at `app.agentmesh.localhost` via shared Traefik (gateway routes both legacy `app.localhost` and `app.agentmesh.localhost`)
 - [x] Versioned test scenario `docs/tests/M13.1-live-ui.md` (Happy/Edge/Fail) — Protocol §4
-- [ ] Dashboard ReactFlow node animation + Blackboard timeline component (UI page wiring)
-- [ ] k6 latency probe to confirm <500 ms p95 under `WORKFLOW_LOAD=1`
+- [x] Dashboard ReactFlow node animation + Blackboard timeline + MAST toasts (`app/dashboard/orchestration/page.tsx`)
+- [x] k6 WebSocket latency probe authored (`load-tests/ws-latency.js`)
+- [ ] Runtime execution: H1–H9 / E1–E7 / F1–F5 + k6 probe under `WORKFLOW_LOAD=1`
 - **Acceptance:** Start a workflow from UI → see nodes light up within 500 ms of backend state change.
 
 ### Sprint 13.2 — **AuthN/Z & Auto-BADS GA** (2 weeks)
