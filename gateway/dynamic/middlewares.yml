@@ -15,13 +15,20 @@ http:
         customResponseHeaders:
           X-Powered-By: "AgentMesh"
 
-    # JWT Auth middleware (for protected routes)
+    # JWT Auth middleware (for protected routes) — M13.2
+    # Calls /api/auth/verify on agentmesh-api with the upstream Authorization
+    # header; on 200 the X-User-Id / X-Tenant-Id / X-Roles headers are
+    # forwarded to the destination. On 401 Traefik returns 401 to the client.
     jwt-auth:
       forwardAuth:
         address: "http://agentmesh-api:8081/api/auth/verify"
+        trustForwardHeader: true
         authResponseHeaders:
           - "X-User-Id"
           - "X-Tenant-Id"
+          - "X-Roles"
+        authRequestHeaders:
+          - "Authorization"
 
     # Retry on failure
     retry-middleware:

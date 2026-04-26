@@ -115,9 +115,18 @@ services:
       - AGENTMESH_API_URL=http://agentmesh-api:8081
     labels:
       - "traefik.enable=true"
+      # Legacy host (kept for backwards-compat)
       - "traefik.http.routers.auto-bads.rule=Host(`bads.localhost`)"
       - "traefik.http.routers.auto-bads.entrypoints=web"
       - "traefik.http.services.auto-bads.loadbalancer.server.port=8083"
+      # M13.2: branded path-based route on the unified API host
+      # Host(api.agentmesh.localhost) && PathPrefix(/bads) → strip → auto-bads:8083
+      - "traefik.http.routers.auto-bads-path.rule=Host(`api.agentmesh.localhost`) && PathPrefix(`/bads`)"
+      - "traefik.http.routers.auto-bads-path.entrypoints=web"
+      - "traefik.http.routers.auto-bads-path.service=auto-bads"
+      - "traefik.http.routers.auto-bads-path.priority=20"
+      - "traefik.http.middlewares.bads-stripprefix.stripprefix.prefixes=/bads"
+      - "traefik.http.routers.auto-bads-path.middlewares=bads-ratelimit,bads-stripprefix"
       # Rate limiting
       - "traefik.http.middlewares.bads-ratelimit.ratelimit.average=50"
       - "traefik.http.middlewares.bads-ratelimit.ratelimit.burst=20"

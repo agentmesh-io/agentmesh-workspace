@@ -38,10 +38,10 @@ Goal: workflow visualisation in real time.
 Goal: production-grade authentication + Auto-BADS 1.0.0 (drops the RC suffix).
 
 - [ ] OAuth2/OIDC at the Traefik edge (forwardAuth → `/api/auth/verify`)
-- [ ] JWT minted by Spring, RSA keys on Blackhole SSD, 15 min TTL
-- [ ] Per-tenant RBAC (admin / developer / viewer) wired into every controller
-- [ ] Auto-BADS fix remaining 1/128 test, ship v1.0.0
-- [ ] Single `Host(api.agentmesh.localhost) → /bads/*` path stripped to Auto-BADS
+- [x] JWT minted by Spring, RSA keys on Blackhole SSD, 15 min TTL — `JwtIssuer` (RS256) + `RsaKeyProvider` + `scripts/gen-jwt-keys.sh`, verified end-to-end via `/api/auth/login` round-trip 2026-04-26
+- [x] Per-tenant RBAC (admin / developer / viewer) wired into every controller (`@PreAuthorize` matrix; `RbacEnforcer` for cross-tenant guard)
+- [x] Auto-BADS fix remaining 1/128 test, ship v1.0.0 — tag `v1.0.0` cut 2026-04-26 (128 tests, 0 failures, 0 errors); fixes: graceful-degradation contract in `ErrorRecoveryTest` + Docker-gated `RedisCacheIntegrationTest`
+- [x] Single `Host(api.agentmesh.localhost) → /bads/*` path stripped to Auto-BADS (`docker-compose.gateway.yml` router `auto-bads-path` + `bads-stripprefix` middleware)
 - **Acceptance:** `k6` smoke profile passes with Authorization Bearer header; 401 without; Auto-BADS tag `v1.0.0` cut.
 
 ### Sprint 13.3 — **Packaging & Demo Day** (2 weeks)
