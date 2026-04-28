@@ -65,9 +65,44 @@ const SKIP_AUTOBADS = __ENV.SKIP_AUTOBADS === '1' || __ENV.SKIP_AUTOBADS === 'tr
 // event publishing, LLM calls). Only include under WORKFLOW_LOAD=1.
 const WORKFLOW_LOAD = __ENV.WORKFLOW_LOAD === '1' || __ENV.WORKFLOW_LOAD === 'true';
 
+// M13.3 commit 1 (R6 close): protected endpoints (/api/projects, /api/workflows,
+// /actuator/prometheus) now require a Bearer token in production. setup() mints
+// one via /api/auth/login; default() threads it via authedHeaders(data).
+const USERNAME = __ENV.USERNAME || 'admin';
+const PASSWORD = __ENV.PASSWORD || 'admin-change-me';
+
 const headers = {
   'Content-Type': 'application/json',
 };
+
+// setup() runs once per test, before VUs ramp up. The returned object is
+// passed as the first argument to default() and teardown().
+export function setup() {
+  const loginRes = http.post(
+    `${AGENTMESH_URL}/api/auth/login`,
+    JSON.stringify({ username: USERNAME, password: PASSWORD }),
+    { headers, tags: { phase: 'setup' } }
+  );
+  if (loginRes.status !== 200) {
+    throw new Error(
+      `setup(): /api/auth/login expected 200, got ${loginRes.status} body=${loginRes.body}`
+    );
+  }
+  const accessToken = loginRes.json('accessToken') || loginRes.json('access_token');
+  if (!accessToken) {
+    throw new Error(`setup(): login response missing accessToken — body=${loginRes.body}`);
+  }
+  console.log(`[setup] minted access token (len=${accessToken.length}) for ${USERNAME}`);
+  return { accessToken };
+}
+
+// Header builder that merges Content-Type with the bearer minted in setup().
+function authedHeaders(data) {
+  return {
+    ...headers,
+    Authorization: `Bearer ${data.accessToken}`,
+  };
+}
 
 // ─── Scenarios ──────────────────────────────────────────────────
 // Helper: record the outcome of a group's checks as a proper rate metric
@@ -77,7 +112,9 @@ function record(ok) {
   return ok;
 }
 
-export default function () {
+export default function (data) {
+  // Header-less probe — proves the public-bypass router (priority 100)
+  // shadows /actuator/health past `jwt-auth@file`. Do NOT add Authorization here.
   group('AgentMesh Health', () => {
     const res = http.get(`${AGENTMESH_URL}/actuator/health`);
     record(check(res, {
@@ -98,7 +135,7 @@ export default function () {
     });
 
     const res = http.post(`${AGENTMESH_URL}/api/projects/initialize`, payload,
-      { headers, timeout: '30s' });
+      { headers: authedHeaders(data), timeout: '30s' });
     projectInitDuration.add(res.timings.duration);
 
     record(check(res, {
@@ -108,13 +145,16 @@ export default function () {
   });
 
   group('AgentMesh Project List', () => {
-    const res = http.get(`${AGENTMESH_URL}/api/projects`);
+    const res = http.get(`${AGENTMESH_URL}/api/projects`, { headers: authedHeaders(data) });
     record(check(res, {
       'Project list 200': (r) => r.status === 200,
     }));
   });
 
   group('AgentMesh Metrics', () => {
+    // /actuator/prometheus stays in the public allow-list (Spring side) so
+    // scrapers don't need a Bearer; sending one is harmless but we keep
+    // this header-less to mirror real Prometheus behaviour.
     const res = http.get(`${AGENTMESH_URL}/actuator/prometheus`);
     record(check(res, {
       'Prometheus metrics 200': (r) => r.status === 200,

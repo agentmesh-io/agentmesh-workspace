@@ -11,6 +11,12 @@ BASE="${BASE:-http://localhost}"
 HOSTH="Host: api.agentmesh.localhost"
 CT="Content-Type: application/json"
 
+# M13.3 commit 1 (R6 close): protected endpoints require a Bearer token.
+# Override credentials via env (USERNAME, PASSWORD) or set AUTH_HDR= to skip.
+USERNAME="${USERNAME:-admin}"
+PASSWORD="${PASSWORD:-admin-change-me}"
+AUTH_HDR="${AUTH_HDR-}"   # may be pre-set by caller; otherwise filled in Step 0
+
 PASS=0
 FAIL=0
 LOG_DIR="$(dirname "$0")/results/uat-$(date -u +%Y%m%d-%H%M%S)"
@@ -21,16 +27,45 @@ ok()    { PASS=$((PASS+1)); echo "  $(c 32 PASS) $1"; }
 fail()  { FAIL=$((FAIL+1)); echo "  $(c 31 FAIL) $1"; }
 step()  { echo; echo "── $(c 36 "$1") ──"; }
 
-# Helper: run curl, write body+status, return status code
+# Helper: run curl, write body+status, return status code.
+# Auto-injects Authorization when AUTH_HDR is set (post-login Step 0).
 req() {
     local method=$1 path=$2 out=$3
     shift 3
-    curl -sS -o "$LOG_DIR/$out" -w "%{http_code}" \
-        -X "$method" -H "$HOSTH" -H "$CT" "$@" "$BASE$path"
+    if [[ -n "$AUTH_HDR" ]]; then
+        curl -sS -o "$LOG_DIR/$out" -w "%{http_code}" \
+            -X "$method" -H "$HOSTH" -H "$CT" -H "$AUTH_HDR" "$@" "$BASE$path"
+    else
+        curl -sS -o "$LOG_DIR/$out" -w "%{http_code}" \
+            -X "$method" -H "$HOSTH" -H "$CT" "$@" "$BASE$path"
+    fi
 }
 
 # ─────────────────────────────────────────────────────────────
+step "0. Authenticate — POST /api/auth/login (R6: AUTH_ENFORCED=true)"
+if [[ -n "$AUTH_HDR" ]]; then
+    ok "AUTH_HDR pre-supplied by caller, skipping login"
+else
+    LOGIN_PAYLOAD=$(printf '{"username":"%s","password":"%s"}' "$USERNAME" "$PASSWORD")
+    code=$(curl -sS -o "$LOG_DIR/00-login.json" -w "%{http_code}" \
+        -X POST -H "$HOSTH" -H "$CT" --data "$LOGIN_PAYLOAD" "$BASE/api/auth/login")
+    if [[ "$code" == "200" ]]; then
+        TOKEN=$(python3 -c "import json,sys; d=json.load(open('$LOG_DIR/00-login.json')); print(d.get('accessToken') or d.get('access_token') or '')" 2>/dev/null || echo "")
+        if [[ -n "$TOKEN" ]]; then
+            AUTH_HDR="Authorization: Bearer $TOKEN"
+            ok "login → 200, accessToken acquired (len=${#TOKEN})"
+        else
+            fail "login 200 but no accessToken — body=$(head -c 200 "$LOG_DIR/00-login.json")"
+        fi
+    else
+        fail "login HTTP=$code body=$(head -c 200 "$LOG_DIR/00-login.json")"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────
 step "1. Pre-flight — gateway reachable, AgentMesh UP"
+# Header-less probe: proves the public-bypass router exposes /actuator/health
+# without a Bearer (M13.3 commit 1 contract).
 code=$(curl -sS -o "$LOG_DIR/01-health.json" -w "%{http_code}" -H "$HOSTH" "$BASE/actuator/health")
 if [[ "$code" == "200" ]] && grep -q '"status":"UP"' "$LOG_DIR/01-health.json"; then
     ok "/actuator/health via gateway returned 200 + UP"
@@ -141,7 +176,7 @@ AGENT_ID="uat-planner-v1"
 TITLE="UAT%20Plan%20Artifact"
 POST_URL="/api/blackboard/entries?agentId=$AGENT_ID&entryType=PLAN&title=$TITLE"
 code=$(curl -sS -o "$LOG_DIR/09-bb-post.json" -w "%{http_code}" -X POST \
-    -H "$HOSTH" -H "Content-Type: text/plain" \
+    -H "$HOSTH" -H "Content-Type: text/plain" ${AUTH_HDR:+-H "$AUTH_HDR"} \
     --data "UAT plan: decompose SRS into 5 tasks for v1.0 smoke" \
     "$BASE$POST_URL")
 if [[ "$code" == "200" ]]; then
@@ -165,7 +200,7 @@ code=$(req GET "/api/blackboard/entries/type/PLAN" 11-bb-plan.json)
 code=$(req GET "/api/blackboard/entries/agent/$AGENT_ID" 12-bb-agent.json)
 [[ "$code" == "200" ]] && ok "filter by agentId=$AGENT_ID → 200" || fail "bb by-agent HTTP=$code"
 
-code=$(curl -sS -o "$LOG_DIR/13-bb-snap.json" -w "%{http_code}" -X POST -H "$HOSTH" -H "$CT" "$BASE/api/blackboard/snapshot")
+code=$(curl -sS -o "$LOG_DIR/13-bb-snap.json" -w "%{http_code}" -X POST -H "$HOSTH" -H "$CT" ${AUTH_HDR:+-H "$AUTH_HDR"} "$BASE/api/blackboard/snapshot")
 if [[ "$code" == "200" ]] && grep -q 'entryCount' "$LOG_DIR/13-bb-snap.json"; then
     ok "blackboard snapshot: $(cat "$LOG_DIR/13-bb-snap.json")"
 else

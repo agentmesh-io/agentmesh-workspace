@@ -48,6 +48,7 @@ Goal: production-grade authentication + Auto-BADS 1.0.0 (drops the RC suffix).
 ### Sprint 13.3 — **Packaging & Demo Day** (2 weeks)
 Goal: install anywhere in ≤ 10 minutes.
 
+- [x] **Commit 1 — R6 close**: `AUTH_ENFORCED=true` hard-default in Spring (`SecurityConfig` `@Value` fallback flipped + test profile pinned to `false` for Surefire) + Traefik edge router split (`agentmesh-api-public` priority 100 for `/api/auth/**`, `/actuator/health*`, `/ws/**`; `agentmesh-api` priority 10 with `jwt-auth@file`); `load-test.js` and `uat-full-flow-v1.sh` now mint a token in setup/Step 0. Rollback handle: `AUTH_ENFORCED=false` env. Risk R6 closed. (2026-04-28)
 - [ ] Helm chart `charts/agentmesh/` (values for dev / staging / prod)
 - [ ] Hardened K8s manifests: NetworkPolicy, PodSecurityPolicy, HPA tuned for load-test numbers
 - [ ] `make demo` target: brings up the full stack in a fresh checkout

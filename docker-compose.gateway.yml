@@ -58,16 +58,34 @@ services:
       - LLM_BASE_URL=${LLM_BASE_URL:-http://host.docker.internal:1234/v1}
       - LLM_API_KEY=${LLM_API_KEY:-}
       - LLM_MODEL=${LLM_MODEL:-magnum-12b-v2}
+      # M13.3 commit 1 (R6 close): production-grade auth ON by default.
+      # Override with `AUTH_ENFORCED=false` in `.env` for local debugging only.
+      - AUTH_ENFORCED=${AUTH_ENFORCED:-true}
     labels:
       - "traefik.enable=true"
-      # Main API router (legacy + branded host)
+      # ─── Public-bypass router (priority 100) ──────────────────────────
+      # Login/refresh/logout, health probes, and the WS handshake must be
+      # reachable WITHOUT a Bearer token. Higher priority than the protected
+      # router below shadows it on these path prefixes.
+      # Note: Spring's SecurityConfig also permits these paths (defence in
+      # depth); the WS handshake additionally validates `?token=` query
+      # param via HandshakeInterceptor (M13.2).
+      - "traefik.http.routers.agentmesh-api-public.rule=(Host(`api.localhost`) || Host(`api.agentmesh.localhost`)) && (PathPrefix(`/api/auth`) || PathPrefix(`/actuator/health`) || PathPrefix(`/actuator/info`) || PathPrefix(`/ws`))"
+      - "traefik.http.routers.agentmesh-api-public.entrypoints=web"
+      - "traefik.http.routers.agentmesh-api-public.service=agentmesh-api"
+      - "traefik.http.routers.agentmesh-api-public.priority=100"
+      - "traefik.http.routers.agentmesh-api-public.middlewares=api-ratelimit,api-cors"
+      # ─── Protected router (priority 10) ──────────────────────────────
+      # Everything else under api.*.localhost goes through `jwt-auth@file`
+      # forwardAuth → /api/auth/verify; on 401 Traefik returns 401 to client.
       - "traefik.http.routers.agentmesh-api.rule=Host(`api.localhost`) || Host(`api.agentmesh.localhost`)"
       - "traefik.http.routers.agentmesh-api.entrypoints=web"
+      - "traefik.http.routers.agentmesh-api.priority=10"
       - "traefik.http.services.agentmesh-api.loadbalancer.server.port=8081"
       # Rate limiting
       - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
       - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=50"
-      - "traefik.http.routers.agentmesh-api.middlewares=api-ratelimit"
+      - "traefik.http.routers.agentmesh-api.middlewares=api-ratelimit,api-cors,jwt-auth@file"
       # CORS headers
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowOriginList=http://localhost:3000,http://app.localhost,http://app.agentmesh.localhost"
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowMethods=GET,POST,PUT,DELETE,OPTIONS"

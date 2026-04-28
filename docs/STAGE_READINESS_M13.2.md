@@ -98,7 +98,7 @@ Suggested ordering (prevents breakage of the running v1.0 dev stack at
 every step):
 
 1. **R6 close**: `AUTH_ENFORCED=true` in Spring + attach `jwt-auth@file`
-   to protected routers + public-bypass router (kicks off this turn).
+   to protected routers + public-bypass router. ✅ **DONE 2026-04-28** (M13.3 commit 1) — see `docs/ACCEPTANCE_M13.3.md`.
 2. Drop duplicated root infra compose; adopt `~/infra/docker-compose.dev.yml`.
 3. Workspace base compose `docker-compose.agentmesh.base.yml`.
 4. Per-stage overlays (`.dev`, `.stage`, `.prod`) + container renames.
