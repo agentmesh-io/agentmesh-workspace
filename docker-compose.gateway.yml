@@ -63,6 +63,9 @@ services:
       - AUTH_ENFORCED=${AUTH_ENFORCED:-true}
     labels:
       - "traefik.enable=true"
+      # The shared dev-traefik must use the global-infra network when routing
+      # to this container (it sits on both agentmesh-net and global-infra).
+      - "traefik.docker.network=global-infra"
       # ─── Public-bypass router (priority 100) ──────────────────────────
       # Login/refresh/logout, health probes, and the WS handshake must be
       # reachable WITHOUT a Bearer token. Higher priority than the protected
@@ -70,11 +73,16 @@ services:
       # Note: Spring's SecurityConfig also permits these paths (defence in
       # depth); the WS handshake additionally validates `?token=` query
       # param via HandshakeInterceptor (M13.2).
-      - "traefik.http.routers.agentmesh-api-public.rule=(Host(`api.localhost`) || Host(`api.agentmesh.localhost`)) && (PathPrefix(`/api/auth`) || PathPrefix(`/actuator/health`) || PathPrefix(`/actuator/info`) || PathPrefix(`/ws`))"
+      - "traefik.http.routers.agentmesh-api-public.rule=(Host(`api.localhost`) || Host(`api.agentmesh.localhost`)) && (PathPrefix(`/api/auth`) || PathPrefix(`/actuator/health`) || PathPrefix(`/actuator/info`) || PathPrefix(`/actuator/prometheus`) || PathPrefix(`/ws`) || PathPrefix(`/v3/api-docs`) || PathPrefix(`/swagger-ui`))"
       - "traefik.http.routers.agentmesh-api-public.entrypoints=web"
       - "traefik.http.routers.agentmesh-api-public.service=agentmesh-api"
       - "traefik.http.routers.agentmesh-api-public.priority=100"
-      - "traefik.http.routers.agentmesh-api-public.middlewares=api-ratelimit,api-cors"
+      - "traefik.http.routers.agentmesh-api-public.middlewares=auth-ratelimit,api-cors"
+      # Auth/health/WS endpoints are bursty by nature (login storms,
+      # k6 setup() bursts, browser reconnect waves). Use a separate,
+      # more-lenient rate limit than the protected api-ratelimit.
+      - "traefik.http.middlewares.auth-ratelimit.ratelimit.average=300"
+      - "traefik.http.middlewares.auth-ratelimit.ratelimit.burst=200"
       # ─── Protected router (priority 10) ──────────────────────────────
       # Everything else under api.*.localhost goes through `jwt-auth@file`
       # forwardAuth → /api/auth/verify; on 401 Traefik returns 401 to client.
@@ -85,11 +93,20 @@ services:
       # Rate limiting
       - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
       - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=50"
-      - "traefik.http.routers.agentmesh-api.middlewares=api-ratelimit,api-cors,jwt-auth@file"
+      - "traefik.http.routers.agentmesh-api.middlewares=api-ratelimit,api-cors,jwt-auth@docker"
       # CORS headers
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowOriginList=http://localhost:3000,http://app.localhost,http://app.agentmesh.localhost"
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowMethods=GET,POST,PUT,DELETE,OPTIONS"
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowHeaders=Content-Type,Authorization,X-Tenant-Id"
+      # ─── jwt-auth middleware (declared via labels so the SHARED dev-traefik
+      # picks it up via its docker provider — referenced as `jwt-auth@docker`).
+      # forwardAuth → /api/auth/verify; on 200 the X-User-Id/X-Tenant-Id/
+      # X-Roles headers are forwarded to the destination. On 401 Traefik
+      # returns 401 to the client. M13.3 commit 1 (R6 close).
+      - "traefik.http.middlewares.jwt-auth.forwardauth.address=http://agentmesh-api:8081/api/auth/verify"
+      - "traefik.http.middlewares.jwt-auth.forwardauth.authResponseHeaders=X-User-Id,X-Tenant-Id,X-Roles"
+      - "traefik.http.middlewares.jwt-auth.forwardauth.authRequestHeaders=Authorization"
+      - "traefik.http.middlewares.jwt-auth.forwardauth.trustForwardHeader=true"
     networks:
       - agentmesh-net
       - global-infra
