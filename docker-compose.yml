@@ -1,8 +1,8 @@
-version: '3.8'
-
 # Shared Infrastructure for AgentMesh Venture
 # Per ~/infra/onboarding.md: Use shared ports (5435 PG, 6381 Redis)
 # Logical isolation via CREATE DATABASE on shared containers
+#
+# `version:` removed — Compose v2 (Docker 20.10+) ignores it and warns.
 
 services:
   postgres:

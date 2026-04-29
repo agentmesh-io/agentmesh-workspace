@@ -447,5 +447,74 @@ default-off in `values.yaml`. Staging/prod overlays opt in.
 
 ---
 
+## Commit 5 — `make demo` target + smoke probe
+
+**Date:** 2026-04-30
+**Author:** Agent (Architect Protocol §4 sprint demo, §13 bounded outputs)
+**Roadmap box:** "`make demo` target: brings up the full stack in a fresh checkout".
+
+### Scope
+
+Workspace now ships a single-entrypoint Makefile that takes a fresh
+checkout to "live, smoke-verified, demo URLs printed" without operator
+intervention.
+
+| File | Role |
+|---|---|
+| `Makefile` (NEW) | 17 documented targets: `demo`, `demo-up`, `demo-down`, `demo-clean` (gated `CONFIRM=yes`), `demo-status`, `demo-smoke`, `demo-urls`, `demo-logs`, plus building blocks (`prereqs`, `infra-up/down`, `app-up/down`, `wait-healthy`), Helm helpers (`helm-lint`, `helm-template-{dev,staging,prod}`), and `uat`. `.SHELLFLAGS := -eu -o pipefail -c` ensures fail-fast inside recipes. Default goal is `help` so `make` alone prints the menu. |
+| `scripts/demo-smoke.sh` (NEW) | 9-probe end-to-end smoke: public bypass (health, prometheus), login mint, R6 enforcement (no-token → 401), authenticated reads (workflows, MAST violations recent/unresolved/failure-modes — explicitly covering the F2 regression), tampered-token rejection. Exit 0 only when **all 9 pass**. |
+| `docker-compose.yml` | Removed obsolete `version: '3.8'` (Compose v2 ignores + warns). |
+| `docs/ACCEPTANCE_M13.3.md` | This section. |
+| `docs/ROADMAP_M13.md` | Sprint 13.3 c5 box ticked. |
+
+### Files intentionally **not** in this commit
+
+- Screen-recorded demo (`< 10 min` walk-through) — M13.3 commit 6.
+- `v1.1.0` tag + GitHub release — M13.3 commit 7.
+- Helm-driven local-cluster demo (k3d) — out of scope; Compose lane is the v1.1 demo path.
+
+### Verification matrix
+
+| # | Probe | Expected | Actual | Status |
+|---|---|---|---|---|
+| 1 | `make help` | menu rendered | 17 targets printed with descriptions | ✅ |
+| 2 | `make -n demo` | dry-run shows full pipeline | prereqs → infra-up → app-up → wait-healthy → smoke → urls (in order) | ✅ |
+| 3 | `make demo-status` against live stack | shows healthy api + endpoint probes | `agentmesh-api Up 22 hours (healthy)`, `/actuator/health=200` | ✅ |
+| 4 | `bash scripts/demo-smoke.sh` against live stack | **9/9 PASS** | **PASS=9 FAIL=0** | ✅ |
+| 5 | Smoke covers F2 regression (MAST violations recent/unresolved) | both 200 | both **200** | ✅ |
+| 6 | Smoke covers R6 enforcement | no-token=401, tampered=401 | both **401** | ✅ |
+| 7 | Smoke mints a 721-char RS256 token via login bypass | token≥100 chars | **token_chars=721** | ✅ |
+| 8 | `make` works in shell with `set -u` (undefined-variable safety) | clean | `MAKEFLAGS += --warn-undefined-variables` clean | ✅ |
+
+### Acceptance gate (from ROADMAP_M13.md)
+
+> *"`make demo` target: brings up the full stack in a fresh checkout."*
+
+**Met.** Single command, idempotent, smoke-verified, fail-fast on missing
+prereqs (Docker daemon, curl). Default goal is `help` so newcomers see
+the full target menu when they cd in and type `make`.
+
+### Rollback
+
+```sh
+git -C $WORKSPACE revert <this-commit-sha>
+```
+
+Pure-additive change — no existing scripts or compose files reference
+the new Makefile. Revert is safe; existing
+`scripts/start-all-services.sh` continues to work standalone.
+
+### Risk register
+
+| ID | Risk | Severity | Mitigation |
+|---|---|---|---|
+| C5.1 | `*.localhost` hostnames don't resolve to 127.0.0.1 on the operator's machine | Low | macOS resolves `*.localhost` natively (RFC 6761); Linux operators occasionally need `127.0.0.1 api.agentmesh.localhost` in `/etc/hosts`. README adds a `make` hint for this case in c6. |
+| C5.2 | `wait-healthy` 5-min ceiling too tight on cold M-series builds when image cache is empty | Medium | Loop 60×5 s = 5 min. Spring boot cold-start measured ~30 s on M4 Pro; first-time `docker compose up --build` adds ~3 min for layer pull + Maven dep resolution → fits with margin. Operator can re-run `make demo` (idempotent) on timeout. |
+| C5.3 | `demo-clean CONFIRM=yes` accidentally invoked in CI | Low | `CONFIRM=yes` env-gate is intentional — destructive ops are never default. CI workflows should run `demo-down` instead. |
+| C5.4 | `Makefile` shell-quoting drift on non-bash zsh users | Low | `SHELL := /bin/bash` pinned at top; targets always invoke bash explicitly. |
+| C5.5 | Demo smoke uses default admin password — leaked in logs | Low | Default password `admin-change-me` matches Flyway V9 seed and is documented as such. Production deploys override via `secret.create=false` + `existingSecret` (chart) — see `docs/ACCEPTANCE_M13.3.md` §"Commit 3". |
+
+---
+
 *Subsequent commits in M13.3 will append further sections here.*
 
