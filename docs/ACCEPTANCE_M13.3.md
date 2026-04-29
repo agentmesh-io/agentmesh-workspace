@@ -92,7 +92,7 @@ shadowing the new `agentmesh-api@docker` router (priority 10) — surfacing as
   3. Update `~/infra/onboarding.md` §7c to note that ventures own their Traefik
      labels via docker provider; shared file-provider hosts only shared services.
 
-#### Finding F2 — NEW — RBAC inconsistency on `/api/mast/violations/{recent,unresolved}`
+#### Finding F2 — RESOLVED in commit 2 (see below) — *was* "RBAC inconsistency on `/api/mast/violations/{recent,unresolved}`"
 
 With `AUTH_ENFORCED=true` in effect, two specific MAST endpoints return
 **HTTP 403** for an admin user even though their containing controller
@@ -190,6 +190,102 @@ docker compose -f docker-compose.gateway.yml up -d agentmesh-api
 ```
 
 No DB migration, no data path change.
+
+---
+
+## Commit 2 — F1 cleanup + F2 root-cause fix (`@Lob`-on-text autocommit trap)
+
+**Date:** 2026-04-28
+**Author:** Agent (Architect Protocol §2 active operator, §4 versioned testing)
+**Findings closed:** **F1** (dead Traefik file-provider config) + **F2** (MAST 403s).
+**Upstream evidence:** AgentMesh@`e166b4f` — `fix(mast): drop @Lob from MASTViolation.evidence — F2 root cause (M13.3 c2)`.
+
+### Scope
+
+| File | Change |
+|---|---|
+| `AgentMesh/src/main/java/.../mast/MASTViolation.java` | **Removed `@Lob`** from `evidence` field; long Javadoc explaining the autocommit-Lob trap so the next person tempted to re-add it stops. `resolution` field guarded by sister test. |
+| `AgentMesh/src/test/java/.../mast/MASTViolationLobMappingTest.java` | **NEW** — reflection-based regression test asserting `evidence` and `resolution` are NOT `@Lob`-annotated. Portable across H2/PG; locks the fix in regardless of test datasource. |
+| `gateway/routes/agentmesh.yml` | **Deleted** — dead M11/M12 host-process-era config (`host.docker.internal:8081`); Traefik file provider only watches `/etc/traefik/dynamic` (= `~/infra/traefik/routes/`), never this path. F1 closed in workspace; companion infra-repo deletion already applied per F1 commit-1 note. |
+| `docs/ACCEPTANCE_M13.3.md` | This section + F2 status flipped from NEW to RESOLVED. |
+| `docs/ROADMAP_M13.md` | Sprint 13.3 box `Commit 2 — F1+F2 cleanup` ticked. |
+| `test-scripts/results/uat-20260428-222830/` | Archived 21/21 PASS UAT artefact (`git add -f`; results dir is `.gitignore`d). |
+
+### F2 root cause — *not* what the symptom looked like
+
+The 403 was **not** a Spring Security RBAC defect. Decoding `agentmesh-api`
+logs (default level — DEBUG bump on `org.springframework.security` showed
+nothing relevant) revealed:
+
+```
+o.h.engine.jdbc.spi.SqlExceptionHelper : Large Objects may not be used in auto-commit mode.
+org.springframework.orm.jpa.JpaSystemException: Unable to access lob stream
+  → org.postgresql.util.PSQLException: Large Objects may not be used in auto-commit mode.
+```
+
+`MASTViolation.evidence` carried `@Lob @Column(columnDefinition = "TEXT")`.
+On PostgreSQL, `@Lob` on a `String` field steers Hibernate onto the
+`ClobJdbcType` path which materialises through `LargeObjectManager` —
+which **requires an active transaction**. The hot read endpoints in
+`MASTValidator` (`getRecentViolations`, `getUnresolvedViolations`,
+`getViolationsByAgent`'s downstream filter) are intentionally
+non-transactional. So whenever `mast_violations` had ≥ 1 row, the read
+threw `JpaSystemException`, which Spring's exception path surfaced as
+**HTTP 403 with empty body** — masquerading as RBAC denial.
+
+**Why the existing IT suite missed it:** `MASTControllerIntegrationTest`
+(and friends) run against H2, which silently tolerates the same
+`@Lob`-on-text path. The defect was invisible until M13.3 c1's
+verification matrix ran the suite against the real `dev-postgres`.
+
+**Why the fix is one annotation:** `mast_violations.evidence` has been
+`text` since Flyway V1, so dropping `@Lob` is a pure Hibernate-side change.
+Hibernate now binds via `VarcharJdbcType` — no transaction required, no DB
+migration, no schema drift, no checksum risk (V9-style).
+
+### Verification matrix
+
+| # | Probe | Expected | Actual | Status |
+|---|---|---|---|---|
+| 1 | `./mvnw test -Dtest=MASTViolationLobMappingTest` | green | **2/2 PASS** | ✅ |
+| 2 | `./mvnw test -Dtest=MASTControllerIntegrationTest` | green (no regression) | **5/5 PASS** | ✅ |
+| 3 | `./mvnw test -Dtest=MASTValidatorTest` | green (no regression) | **10/10 PASS** | ✅ |
+| 4 | `curl -H "Authorization: Bearer $T" /api/mast/violations/recent` | 200 (was 403) | **HTTP 200** | ✅ |
+| 5 | `curl -H "Authorization: Bearer $T" /api/mast/violations/unresolved` | 200 (was 403) | **HTTP 200** | ✅ |
+| 6 | `curl -H "Authorization: Bearer $T" /api/mast/violations/agent/test-agent` | 200 (was 403) | **HTTP 200** | ✅ |
+| 7 | `curl -H "Authorization: Bearer $T" /api/mast/health/test-agent` | 200 (no regression) | **HTTP 200** | ✅ |
+| 8 | `curl -H "Authorization: Bearer $T" /api/mast/failure-modes` | 200 (no regression) | **HTTP 200** | ✅ |
+| 9 | `curl -H "Authorization: Bearer $T" /api/mast/statistics/failure-modes` | 200 (no regression) | **HTTP 200** | ✅ |
+| 10 | `bash test-scripts/uat-full-flow-v1.sh` | 21/21 PASS | **PASS=21 FAIL=0** (was 19/21 in c1) | ✅ |
+| 11 | `ls gateway/routes/agentmesh.yml` | not found | deleted | ✅ |
+
+### Trend update
+
+| Metric | M13.2 baseline | M13.3 c1 | M13.3 c2 |
+|---|---|---|---|
+| UAT pass count | 21/21 | 19/21 (F2) | **21/21** ✅ back to baseline |
+| MAST violations endpoints (recent/unresolved/by-agent) | n/a (auth off) | 403/403/403 | **200/200/200** |
+| Regression tests guarding F2 | none | none | **2 (`MASTViolationLobMappingTest`)** |
+
+### Rollback
+
+```sh
+# Revert the MASTViolation change (re-introduces the bug)
+git -C AgentMesh revert e166b4f
+docker compose -f docker-compose.gateway.yml up -d --build agentmesh-api
+```
+
+The companion `gateway/routes/agentmesh.yml` deletion is independently
+revertable via `git revert` of this workspace commit; it was already dead
+config so no functional rollback is needed.
+
+### Risk register
+
+| ID | Risk | Severity | Mitigation |
+|---|---|---|---|
+| F2.1 | Future contributor re-adds `@Lob` to a String field thinking it's a perf hint | Medium | `MASTViolationLobMappingTest` fails immediately; Javadoc on the field explains the trap |
+| F2.2 | Other entities carry the same latent defect | Low | Codebase grep `git grep -n "@Lob"` in `AgentMesh/src/main/java` — none remain on String fields backed by `text` columns; revisit in M14 if new ones appear |
+| F2.3 | Spring exception translation hides future root causes the same way | Low | Documented diagnostic playbook (Hibernate/JDBC default-level logs) in this finding for future operators |
 
 ---
 
