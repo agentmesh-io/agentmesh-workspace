@@ -25,6 +25,21 @@ podDisruptionBudget:
 
 networkPolicy:
   enabled: true
+  ingressFromNamespaces:
+    - traefik
+    - kube-system
+  egressToNamespaces:
+    - default
+    - data
+
+namespace:
+  create: false
+  podSecurityLevel: baseline
+
+metrics:
+  serviceMonitor:
+    enabled: true
+    interval: 30s
 
 config:
   SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"

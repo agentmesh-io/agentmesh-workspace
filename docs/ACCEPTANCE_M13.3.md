@@ -372,5 +372,80 @@ The chart is purely additive — no existing resources reference
 
 ---
 
+## Commit 4 — Hardened K8s manifests (NetworkPolicy / PSA / HPA tuning / ServiceMonitor)
+
+**Date:** 2026-04-29
+**Author:** Agent (Architect Protocol §4 versioned testing, §9 multi-stage)
+**Roadmap box:** "Hardened K8s manifests: NetworkPolicy, PodSecurityPolicy, HPA tuned for load-test numbers".
+
+### Scope
+
+Tightened the chart's security & ops surface, retaining backward-
+compatibility (every new feature is gated, default `false`/`off`).
+
+| File | Change |
+|---|---|
+| `charts/agentmesh/values.yaml` | Replaced bare `networkPolicy.enabled` with structured selectors (`ingressFromNamespaces`, `egressToNamespaces`, `extraEgress`); added `namespace.{create,podSecurityLevel,extraLabels,extraAnnotations}`; added `metrics.serviceMonitor.{enabled,namespace,labels,interval,scrapeTimeout}`; added `topologySpreadConstraints`; rewrote `autoscaling.behavior` with `selectPolicy: Max`, faster scale-up (15 s) and pod-count policy (`+2 / 30 s`) — calibrated against M12 load-test numbers (p95 12.96 ms @ 100 VUs, 222 req/s, ramp peak 109 ms). |
+| `charts/agentmesh/templates/networkpolicy.yaml` | Replaced `namespaceSelector: {}` (allow-all) with named-namespace selectors via `kubernetes.io/metadata.name`; same-ns pod ingress; HTTPS egress now uses `ipBlock cidr=0.0.0.0/0 except RFC1918` to deny lateral movement. |
+| `charts/agentmesh/templates/namespace.yaml` (NEW) | Optional Namespace template with PSA labels (`pod-security.kubernetes.io/enforce|audit|warn`), gated by `namespace.create=true`. |
+| `charts/agentmesh/templates/servicemonitor.yaml` (NEW) | Prometheus Operator integration — scrapes `/actuator/prometheus` on port `http`. |
+| `charts/agentmesh/templates/deployment.yaml` | Added `topologySpreadConstraints` block (gated by non-empty value). |
+| `charts/agentmesh/values-staging.yaml` | NetworkPolicy ingress allowed from `traefik`/`kube-system`, egress to `default`/`data`; ServiceMonitor on (30 s); PSA target `baseline`. |
+| `charts/agentmesh/values-prod.yaml` | NetworkPolicy ingress from `traefik`/`ingress-nginx`/`kube-system`, egress to `data`/`platform`; ServiceMonitor on (15 s, 10 s timeout); PSA target `restricted`; topologySpread on `topology.kubernetes.io/zone` + `kubernetes.io/hostname` (`ScheduleAnyway`, `maxSkew=1`). |
+| `charts/agentmesh/README.md` | Stage table extended with PSA / TopologySpread / ServiceMonitor columns; new "HPA tuning rationale" section linking M12 numbers. |
+
+### Files intentionally **not** in this commit
+
+- Deprecating `AgentMesh/k8s/agentmesh-deployment.yaml` to `AgentMesh/k8s/legacy/` (cross-repo rename — rides to a focused AgentMesh-side commit when M13.3 lands).
+- `make demo` target — M13.3 commit 5.
+- Hardened image (distroless / chiseled) — separate AgentMesh-side workstream; chart already runs as non-root with `seccompProfile: RuntimeDefault` and `capabilities.drop: [ALL]`.
+
+### Verification matrix
+
+| # | Probe | Expected | Actual | Status |
+|---|---|---|---|---|
+| 1 | `helm lint charts/agentmesh -f values-dev.yaml` | clean | `0 chart(s) failed` | ✅ |
+| 2 | `helm lint charts/agentmesh -f values-staging.yaml` | clean | `0 chart(s) failed` | ✅ |
+| 3 | `helm lint charts/agentmesh -f values-prod.yaml` | clean | `0 chart(s) failed` | ✅ |
+| 4 | `helm template … values-dev.yaml` | unchanged scope, no SM | **6 resources**, 0 sentinels (SA, Secret, CM, Service, Deploy, Ingress) | ✅ |
+| 5 | `helm template … values-staging.yaml` | +ServiceMonitor | **10 resources**, 0 sentinels (▲1 vs c3: ServiceMonitor added) | ✅ |
+| 6 | `helm template … values-prod.yaml` | +ServiceMonitor, no in-chart Secret | **9 resources**, 0 sentinels (▲1 vs c3: ServiceMonitor added) | ✅ |
+| 7 | Prod NetworkPolicy egress denies RFC1918 | `ipBlock cidr=0.0.0.0/0 except 10/8,172.16/12,192.168/16` on port 443 | confirmed in render | ✅ |
+| 8 | Prod NetworkPolicy ingress is namespace-pinned | `kubernetes.io/metadata.name: traefik`/`ingress-nginx`/`kube-system` | confirmed in render | ✅ |
+| 9 | Prod Deployment carries topologySpread | 2 constraints (zone + hostname, `ScheduleAnyway`, `maxSkew=1`) | confirmed in render | ✅ |
+| 10 | Prod HPA tuned to M12 numbers | scaleUp window=15 s, scaleUp policies (Percent 100 % / Pods +2), selectPolicy=Max, scaleDown 300 s | confirmed in render | ✅ |
+| 11 | Staging ServiceMonitor renders | port `http`, path `/actuator/prometheus`, interval 30 s | confirmed in render | ✅ |
+
+### Acceptance gate (from ROADMAP_M13.md)
+
+> *"Hardened K8s manifests: NetworkPolicy, PodSecurityPolicy, HPA tuned for load-test numbers"*
+
+**All three gates met.** Note: PodSecurityPolicy is removed in K8s 1.25+;
+this chart targets the modern replacement — Pod Security Admission via
+namespace labels (`pod-security.kubernetes.io/enforce`).
+
+### Rollback
+
+```sh
+git -C $WORKSPACE revert <this-commit-sha>
+helm upgrade --install agentmesh charts/agentmesh \
+  -n agentmesh -f charts/agentmesh/values-prod.yaml --reuse-values
+```
+
+The chart remains backward-compatible: every new feature is gated and
+default-off in `values.yaml`. Staging/prod overlays opt in.
+
+### Risk register
+
+| ID | Risk | Severity | Mitigation |
+|---|---|---|---|
+| C4.1 | NetworkPolicy egress to `kubernetes.io/metadata.name=data` blocks legitimate DB traffic if operator's data services live in a different namespace | Medium | `egressToNamespaces` is a list — operator overrides per cluster. Failure surfaces fast at startup (init-container `nc -z` blocks indefinitely with clear "waiting for postgres" log) |
+| C4.2 | PSA `restricted` rejects pods that don't drop all caps + run as non-root | Low | Pod template already complies (`runAsNonRoot=true`, `capabilities.drop=[ALL]`, `allowPrivilegeEscalation=false`, `seccompProfile=RuntimeDefault`) |
+| C4.3 | RFC1918-deny egress blocks an in-cluster service mesh sidecar talking to a private control plane | Low | `extraEgress` escape hatch in `values.yaml` lets operator append per-cluster rules |
+| C4.4 | ServiceMonitor renders against a cluster without prom-operator CRDs | Low | Default off; staging/prod values flip on, and operators with vanilla Prometheus can keep `metrics.serviceMonitor.enabled=false` and rely on the existing `prometheus.io/scrape` pod annotations |
+| C4.5 | HPA scales up too aggressively (`+2 pods / 30 s`) on a small dev cluster | Low | Dev disables autoscaling entirely (`replicaCount: 1`); staging caps at 4, prod at 10 — `selectPolicy: Max` only "selects" within configured maxReplicas |
+
+---
+
 *Subsequent commits in M13.3 will append further sections here.*
 

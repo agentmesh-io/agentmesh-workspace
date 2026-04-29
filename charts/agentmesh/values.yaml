@@ -105,8 +105,13 @@ autoscaling:
   maxReplicas: 5
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
-  # Behavior block keeps prod-style scale-down dampening; dev disables
-  # autoscaling entirely so reproducing "1 pod" is trivial.
+  # Behavior tuned with M12 load-test numbers (docs/LOAD_TEST_REPORT_M12.md):
+  #   • baseline p95 = 12.96 ms @ 100 VUs sustained, 222 req/s, 0 errors
+  #     → 38× headroom vs. 500 ms gate; CPU is the lagging signal, not RPS
+  #   • ramp-up p95 peaked at 109 ms during 15 s burst → scale-up reacts
+  #     fast (15 s stabilization) so cold pods finish startup before next wave
+  #   • scale-down deliberately slow (5 min stabilization, 50 %/min cap)
+  #     to keep capacity sticky across LLM bursts (longer-tail than HTTP)
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 300
@@ -115,11 +120,15 @@ autoscaling:
           value: 50
           periodSeconds: 60
     scaleUp:
-      stabilizationWindowSeconds: 30
+      stabilizationWindowSeconds: 15
       policies:
         - type: Percent
           value: 100
           periodSeconds: 30
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      selectPolicy: Max
 
 podDisruptionBudget:
   enabled: false
@@ -205,10 +214,47 @@ secret:
 # Reference an externally-managed Secret instead of `secret.create=true`.
 existingSecret: ""
 
-# NetworkPolicy / PodSecurityPolicy hooks — disabled by default; staging
-# values turn them on. Tracked in M13.3 commit 4 (hardened manifests).
+# NetworkPolicy hooks. Hardened in commits 4+. Ingress and data-tier
+# selectors are configurable so each cluster operator can pin them to
+# their actual namespaces (Traefik typically lives in `traefik`/`kube-system`,
+# data services in `data`/`platform`).
 networkPolicy:
   enabled: false
+  # Namespaces (by `kubernetes.io/metadata.name`) allowed to send ingress
+  # to AgentMesh pods. Empty list = no namespace selector → only same-ns.
+  ingressFromNamespaces:
+    - traefik
+    - ingress-nginx
+  # Allowed egress targets. Each entry produces one matching `to` block.
+  egressToNamespaces:
+    - default      # default for in-cluster shared infra
+  # Extra raw egress rules appended after the templated ones (escape hatch).
+  extraEgress: []
+
+# Optional Namespace template — the chart can manage its own namespace
+# with PSA labels (Pod Security Admission). Stage profiles set the level.
+# Disabled by default so consumers don't accidentally claim ownership of
+# a shared namespace they didn't create.
+namespace:
+  create: false
+  podSecurityLevel: ""   # "" | "privileged" | "baseline" | "restricted"
+  extraLabels: {}
+  extraAnnotations: {}
+
+# Prometheus Operator integration. ServiceMonitor scrapes the `http`
+# port at `/actuator/prometheus`. Off by default (most clusters don't
+# run prom-operator); staging/prod values flip it on.
+metrics:
+  serviceMonitor:
+    enabled: false
+    namespace: ""        # defaults to release namespace when blank
+    labels: {}
+    interval: 30s
+    scrapeTimeout: 10s
+
+# Topology spread — used in prod to enforce 1-pod-per-zone HA without
+# relying solely on soft pod anti-affinity (which is best-effort).
+topologySpreadConstraints: []
 
 extraVolumes: []
 extraVolumeMounts: []

@@ -13,25 +13,43 @@ spec:
     - Ingress
     - Egress
   ingress:
-    # Ingress controller (Traefik) → Service port
+    # Same-namespace pods (sidecars, service-to-service)
     - from:
-        - namespaceSelector: {}
+        - podSelector: {}
       ports:
         - protocol: TCP
           port: {{ .Values.service.targetPort }}
+    {{- with .Values.networkPolicy.ingressFromNamespaces }}
+    # Allowed external namespaces (eg. Traefik / ingress controller)
+    - from:
+        {{- range . }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ . | quote }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ $.Values.service.targetPort }}
+    {{- end }}
   egress:
-    # DNS
+    # DNS — kube-dns lives in kube-system on stock clusters
     - to:
-        - namespaceSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
       ports:
         - protocol: UDP
           port: 53
         - protocol: TCP
           port: 53
-    # Postgres / Redis / Kafka — intentionally permissive (in-cluster); each
-    # cluster operator may tighten via `networkPolicy.extra*` once defined.
+    {{- with .Values.networkPolicy.egressToNamespaces }}
+    # Data-tier (Postgres / Redis / Kafka) — pinned namespace selector
     - to:
-        - namespaceSelector: {}
+        {{- range . }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ . | quote }}
+        {{- end }}
       ports:
         - protocol: TCP
           port: 5432
@@ -39,11 +57,21 @@ spec:
           port: 6379
         - protocol: TCP
           port: 9092
-    # HTTPS egress (LLM provider, GitHub, etc.)
+    {{- end }}
+    # HTTPS egress (LLM provider, GitHub, OCI registries) — public
+    # Internet only; deny RFC1918 CIDRs to prevent lateral movement.
     - to:
-        - namespaceSelector: {}
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
       ports:
         - protocol: TCP
           port: 443
+    {{- with .Values.networkPolicy.extraEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- end }}
 

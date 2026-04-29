@@ -42,6 +42,38 @@ podDisruptionBudget:
 
 networkPolicy:
   enabled: true
+  ingressFromNamespaces:
+    - traefik
+    - ingress-nginx
+    - kube-system
+  egressToNamespaces:
+    - data
+    - platform
+
+namespace:
+  create: false
+  podSecurityLevel: restricted
+
+metrics:
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+
+# HA spread: at least 1 pod per zone, hard constraint when possible.
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: agentmesh
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: agentmesh
 
 config:
   SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"

@@ -31,11 +31,11 @@ charts/agentmesh/
 
 ## Stage profiles
 
-| Stage   | Host                              | Replicas | HPA   | PDB | NetworkPolicy | AUTH_ENFORCED | Secret source            |
-|---------|-----------------------------------|----------|-------|-----|---------------|---------------|--------------------------|
-| dev     | `api.agentmesh.localhost`         | 1        | off   | off | off           | `false`       | in-chart                 |
-| staging | `api-stage.agentmesh.localhost`   | 2        | 2–4   | 1   | on            | `true`        | in-chart                 |
-| prod    | `api.agentmesh.io` (override)     | 3        | 3–10  | 2   | on            | `true`        | external (`existingSecret`) |
+| Stage   | Host                              | Replicas | HPA   | PDB | NetworkPolicy | ServiceMonitor | PSA target | TopologySpread | AUTH_ENFORCED | Secret source            |
+|---------|-----------------------------------|----------|-------|-----|---------------|---------------|------------|----------------|---------------|--------------------------|
+| dev     | `api.agentmesh.localhost`         | 1        | off   | off | off           | off           | —          | off            | `false`       | in-chart                 |
+| staging | `api-stage.agentmesh.localhost`   | 2        | 2–4   | 1   | on            | on (30s)      | baseline   | off            | `true`        | in-chart                 |
+| prod    | `api.agentmesh.io` (override)     | 3        | 3–10  | 2   | on            | on (15s)      | restricted | zone+host      | `true`        | external (`existingSecret`) |
 
 The host pattern matches Architect Protocol §9:
 
@@ -124,8 +124,24 @@ annotations so config/secret changes always trigger rolling restarts.
 
 ## Notes & next steps
 
-* M13.3 commit 4 will harden the K8s manifests further (PSA labels,
-  tighter NetworkPolicy egress, HPA tuned to load-test numbers).
+* M13.3 commit 4 hardened the chart (PSA-aware Namespace template,
+  ServiceMonitor for prom-operator, tightened NetworkPolicy with
+  RFC1918-deny egress, topologySpread for prod, HPA tuned with
+  M12 load-test numbers).
 * M13.3 commit 5 will introduce the `make demo` target which calls
   this chart for the local lane.
+
+## HPA tuning rationale
+
+The autoscaling block is calibrated against the **M12 load-test report**
+(`docs/LOAD_TEST_REPORT_M12.md`):
+
+* Sustained baseline: **p95 = 12.96 ms** @ 100 VUs, 222 req/s, 0 errors
+  → 38× headroom vs the published 500 ms gate.
+* Ramp-up burst: p95 spiked to **109 ms during the 15 s ramp** as cold
+  pods finished startup. This drives `scaleUp.stabilizationWindowSeconds=15`
+  with a `selectPolicy: Max` over (Percent 100 % / 30 s, Pods +2 / 30 s)
+  so capacity gets ahead of bursty workloads.
+* Scale-down: 5 min stabilization + 50 %/min cap. LLM tail latency runs
+  longer than HTTP p95, so we keep capacity sticky to absorb bursts.
 
