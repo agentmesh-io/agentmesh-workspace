@@ -1,0 +1,37 @@
+# =============================================================================
+# Stage: dev — single-replica, no HPA, no PDB, permissive logging.
+# Host:  api.agentmesh.localhost  (Architect Protocol §9 dev convention).
+# =============================================================================
+
+stage: dev
+
+replicaCount: 1
+
+image:
+  pullPolicy: Always   # tracking :dev or :latest in dev
+
+ingress:
+  host: api.agentmesh.localhost
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 384Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+config:
+  SPRING_JPA_SHOW_SQL: "true"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+  LOGGING_LEVEL_COM_THERIGHTHANDAPP: "DEBUG"
+  AUTH_ENFORCED: "false"   # dev convenience; flipped on by stage/prod
+

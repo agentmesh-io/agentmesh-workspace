@@ -289,5 +289,88 @@ config so no functional rollback is needed.
 
 ---
 
+## Commit 3 — Helm chart `charts/agentmesh/` (dev / staging / prod)
+
+**Date:** 2026-04-29
+**Author:** Agent (Architect Protocol §4 versioned testing, §9 multi-stage)
+**Roadmap box:** "Helm chart `charts/agentmesh/` (values for dev / staging / prod)".
+
+### Scope
+
+Created a stage-aware Helm chart at `charts/agentmesh/` with one shared
+default values file plus three stage overlays. Helm 4.1.4 installed via
+Homebrew (was missing on this host).
+
+| File | Role |
+|---|---|
+| `Chart.yaml` | apiVersion v2, version 0.1.0, appVersion 1.1.0, kubeVersion ≥1.28 |
+| `values.yaml` | Defaults: 2 replicas, ClusterIP svc, ingress (no host — must be set per stage), HPA off, PDB off, NetworkPolicy off, in-chart Secret, AUTH_ENFORCED=true (R6) |
+| `values-dev.yaml` | 1 replica, host `api.agentmesh.localhost`, AUTH_ENFORCED=false, DEBUG logs, JPA `update`, no HPA/PDB/NP |
+| `values-staging.yaml` | 2 replicas, host `api-stage.agentmesh.localhost`, HPA 2–4, PDB minAvailable=1, NetworkPolicy on, AUTH_ENFORCED=true |
+| `values-prod.yaml` | 3 replicas, host `api.agentmesh.io` (overridable), HPA 3–10, PDB minAvailable=2, NetworkPolicy on, TLS via cert-manager, externalised Secret (`existingSecret: agentmesh-secrets`) |
+| `templates/_helpers.tpl` | Standard Helm helpers + `agentmesh.springProfile` (resolves `SPRING_PROFILES_ACTIVE` from `.stage` when blank), `agentmesh.secretName` (existingSecret-aware), `agentmesh.image` (appVersion fallback) |
+| `templates/serviceaccount.yaml` | gated by `serviceAccount.create` |
+| `templates/configmap.yaml` | All non-empty `.Values.config` keys, plus computed `SPRING_PROFILES_ACTIVE` |
+| `templates/secret.yaml` | gated by `secret.create && !existingSecret` |
+| `templates/deployment.yaml` | RollingUpdate 1/0, init-containers (postgres/redis), Spring Actuator startup/liveness/readiness probes, `checksum/config` + `checksum/secret` annotations for auto-rollouts on config/secret change |
+| `templates/service.yaml` | ClusterIP, sessionAffinity ClientIP for WS continuity |
+| `templates/ingress.yaml` | networking.k8s.io/v1, ingressClassName configurable, **fails fast** when `ingress.host` empty (forces stage-values discipline) |
+| `templates/hpa.yaml` | autoscaling/v2, gated by `autoscaling.enabled`; CPU + memory targets; behaviour stanza overridable |
+| `templates/pdb.yaml` | gated by `podDisruptionBudget.enabled` |
+| `templates/networkpolicy.yaml` | gated by `networkPolicy.enabled`; pod-selector matches the chart, allows DNS + 5432/6379/9092 + 443 egress |
+| `templates/NOTES.txt` | Per-stage URL + rollout/port-forward/rollback hints |
+| `.helmignore`, `README.md` | Standard hygiene + chart usage docs |
+
+### Files intentionally **not** in this commit
+
+- Hardened K8s manifests (PSA labels, tightened NetworkPolicy egress, HPA tuned to M12 load-test numbers) — deferred to M13.3 commit 4.
+- `make demo` target — deferred to M13.3 commit 5.
+- Umbrella chart bundling Postgres/Redis/Kafka — out of scope for v1.1; consumers point at existing in-cluster services.
+
+### Verification matrix
+
+| # | Probe | Expected | Actual | Status |
+|---|---|---|---|---|
+| 1 | `brew install helm` | Helm CLI available | **Helm 4.1.4** installed | ✅ |
+| 2 | `helm lint charts/agentmesh` (default values, no host set) | host check fires | `INFO funcMap fail … ingress.host must be set` (intended fail-closed) | ✅ |
+| 3 | `helm lint charts/agentmesh -f values-dev.yaml` | clean | `1 chart(s) linted, 0 chart(s) failed` | ✅ |
+| 4 | `helm lint charts/agentmesh -f values-staging.yaml` | clean | `1 chart(s) linted, 0 chart(s) failed` | ✅ |
+| 5 | `helm lint charts/agentmesh -f values-prod.yaml` | clean | `1 chart(s) linted, 0 chart(s) failed` | ✅ |
+| 6 | `helm template … values-dev.yaml` | renders, no `<no value>` | **6 resources** (SA, Secret, CM, Service, Deployment, Ingress); 0 sentinels | ✅ |
+| 7 | `helm template … values-staging.yaml` | renders, HPA+PDB+NP | **9 resources** (NP, PDB, SA, Secret, CM, Service, Deployment, HPA, Ingress); 0 sentinels | ✅ |
+| 8 | `helm template … values-prod.yaml` | renders, no in-chart Secret | **8 resources** (NP, PDB, SA, CM, Service, Deployment, HPA, Ingress); Secret omitted (uses `existingSecret`); 0 sentinels | ✅ |
+| 9 | Resource names coherent across stages | `agentmesh`, `agentmesh-config`, `agentmesh-secrets` | exact match | ✅ |
+| 10 | Stage label on every rendered resource (`agentmesh.io/stage`) | `dev` / `stage` / `prod` | confirmed via labels block | ✅ |
+
+### Acceptance gate (from ROADMAP_M13.md)
+
+> *"Acceptance: Helm chart `lint` + `template` clean; …"*
+
+**Gate met for the chart half** (lint + template clean for all three
+stages, fail-closed on missing host). The `make demo` half rides to
+commit 5.
+
+### Rollback
+
+```sh
+git -C $WORKSPACE revert <this-commit-sha>
+# or, in-cluster:
+helm -n agentmesh rollback agentmesh <REVISION>
+```
+
+The chart is purely additive — no existing resources reference
+`charts/agentmesh/`; revert is safe.
+
+### Risk register
+
+| ID | Risk | Severity | Mitigation |
+|---|---|---|---|
+| C3.1 | A team installs the chart with default values (no `-f values-{dev,stage,prod}.yaml`) and gets a broken Ingress | Medium | `ingress.yaml` calls `fail` when `ingress.host` is empty — install aborts with a clear message |
+| C3.2 | Drift between `values-prod.yaml` and the existing `AgentMesh/k8s/agentmesh-deployment.yaml` raw manifests | Low | Chart is the new source of truth; raw manifests will be deprecated to `AgentMesh/k8s/legacy/` in commit 4 |
+| C3.3 | A consumer of `values-prod.yaml` forgets to pre-create the `agentmesh-secrets` Secret | Medium | README "Required external resources" section + envFrom failure on Pod startup is fast and obvious |
+| C3.4 | NetworkPolicy too strict for a real prod cluster (eg LLM provider over a non-443 port) | Low | Egress block is intentionally permissive (DNS + 5432/6379/9092 + 443); operator can tighten via overrides |
+
+---
+
 *Subsequent commits in M13.3 will append further sections here.*
 

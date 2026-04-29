@@ -1,0 +1,33 @@
+# =============================================================================
+# Stage: stage — production-like, 2 replicas, HPA on, PDB on.
+# Host:  api-stage.agentmesh.localhost  (Architect Protocol §9 stage suffix).
+# =============================================================================
+
+stage: stage
+
+replicaCount: 2
+
+ingress:
+  host: api-stage.agentmesh.localhost
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  tls:
+    enabled: false
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+
+config:
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  LOGGING_LEVEL_COM_THERIGHTHANDAPP: "INFO"
+  AUTH_ENFORCED: "true"
+

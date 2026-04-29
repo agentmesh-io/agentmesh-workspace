@@ -1,7 +1,9 @@
 # Subprojects (separate repos)
-AgentMesh/
-AgentMesh-UI/
-Auto-BADS/
+# NB: anchored with leading slash to avoid matching `charts/agentmesh/`
+# on case-insensitive filesystems (macOS APFS).
+/AgentMesh/
+/AgentMesh-UI/
+/Auto-BADS/
 # Logs
 logs/
 # IDE

@@ -1,0 +1,22 @@
+AgentMesh ({{ .Values.stage }}) is up.
+
+Release:    {{ .Release.Name }}
+Namespace:  {{ .Release.Namespace }}
+Image:      {{ include "agentmesh.image" . }}
+Replicas:   {{ if .Values.autoscaling.enabled }}HPA {{ .Values.autoscaling.minReplicas }}–{{ .Values.autoscaling.maxReplicas }}{{ else }}{{ .Values.replicaCount }} (static){{ end }}
+{{- if .Values.ingress.enabled }}
+URL:        {{ if .Values.ingress.tls.enabled }}https{{ else }}http{{ end }}://{{ .Values.ingress.host }}/
+{{- end }}
+
+Quick checks
+────────────
+  kubectl -n {{ .Release.Namespace }} rollout status deploy/{{ include "agentmesh.fullname" . }}
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "agentmesh.fullname" . }} 8081:{{ .Values.service.port }}
+  curl -fsS http://localhost:8081/actuator/health
+
+Stage rollback to a prior revision
+──────────────────────────────────
+  helm -n {{ .Release.Namespace }} rollback {{ .Release.Name }}
+
+See `charts/agentmesh/README.md` for the full upgrade / rollback playbook.
+

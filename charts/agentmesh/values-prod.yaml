@@ -1,0 +1,60 @@
+# =============================================================================
+# Stage: prod — HA, HPA, PDB, NetworkPolicy, TLS-ready, secret externalised.
+# Host:  api.agentmesh.io (override per environment via --set ingress.host=...).
+# =============================================================================
+
+stage: prod
+
+replicaCount: 3
+
+image:
+  pullPolicy: IfNotPresent
+
+ingress:
+  host: api.agentmesh.io
+  className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  tls:
+    enabled: true
+    secretName: agentmesh-tls
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+networkPolicy:
+  enabled: true
+
+config:
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  SPRING_JPA_SHOW_SQL: "false"
+  LOGGING_LEVEL_COM_THERIGHTHANDAPP: "INFO"
+  LOGGING_LEVEL_ROOT: "WARN"
+  AUTH_ENFORCED: "true"
+  SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "50"
+  SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "10"
+
+# Prod path: do NOT manage the secret in-chart; reference one created by
+# sealed-secrets / external-secrets / Vault.
+secret:
+  create: false
+existingSecret: agentmesh-secrets
+
