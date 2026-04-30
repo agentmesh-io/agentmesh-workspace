@@ -105,6 +105,10 @@ demo-status: ## Show container status + endpoint probes
 demo-smoke: ## Run end-to-end smoke probe against the running stack
 	@bash scripts/demo-smoke.sh
 
+.PHONY: demo-walkthrough
+demo-walkthrough: ## Paced narrator-friendly tour (mirrors docs/DEMO_SCRIPT_v1.1.md)
+	@bash scripts/demo-walkthrough.sh
+
 .PHONY: demo-urls
 demo-urls: ## Print operator-friendly URLs
 	@printf "\n$(GREEN)AgentMesh demo is up$(RESET)\n"
