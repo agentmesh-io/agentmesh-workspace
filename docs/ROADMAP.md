@@ -1,7 +1,7 @@
 # 🗺️ AgentMesh Platform — ROADMAP
 
-**Last Updated:** April 26, 2026 (M13 Sprint 13.1 — Live UI streaming wired)  
-**Status:** Released — v1.0.0 · Active sprint: **M13.1 (Live UI)**
+**Last Updated:** April 30, 2026 (M13 closed — v1.1.0 Adoption Train released)
+**Status:** Released — **v1.1.0 Adoption Train**.  Active sprint: **M14 (post-v1.1 — SSO + Billing + Prompt Library)**
 
 ---
 
@@ -9,9 +9,10 @@
 
 | Project | Version | Stage | Health |
 |---------|---------|-------|--------|
-| **AgentMesh** (Backend) | **v1.0.0** | Released | 🟢 [Genesis release](https://github.com/agentmesh-io/agentmesh/releases/tag/v1.0.0) |
-| **AgentMesh-UI** (Frontend) | v0.3.0 | ~90 % feature-complete | 🟡 Live UI target: M13.1 |
-| **Auto-BADS** (Analysis) | v1.0.0-RC1 | ~98 % (127/128 tests) | 🟡 GA target: M13.2 |
+| **AgentMesh** (Backend) | **v1.1.0** | Released | 🟢 [Adoption Train release](https://github.com/agentmesh-io/agentmesh/releases/tag/v1.1.0) |
+| **AgentMesh-UI** (Frontend) | v0.3.0 | ~90 % feature-complete; auth-wired via M13.2 | 🟢 Bundled under v1.1.0 release |
+| **Auto-BADS** (Analysis) | v1.0.0 | Released | 🟢 [v1.0.0 tag](https://github.com/agentmesh-io/auto-bads/releases/tag/v1.0.0) |
+| **Workspace** | v1.1.0 | Released | 🟢 [Adoption Train release](https://github.com/agentmesh-io/agentmesh-workspace/releases/tag/v1.1.0) |
 
 ---
 
@@ -117,22 +118,22 @@
 - [x] User acceptance testing ✅ (20/20 PASS via gateway; project init, workflow start, blackboard persistence, 14 MAST failure modes; see UAT_REPORT_M12.md)
 - [x] Tag v1.0.0 & production deployment ✅ (AgentMesh/pom.xml 1.0.0-RC1 → 1.0.0, annotated tag v1.0.0, GitHub release published)
 
-### 🔲 M13 — Post-1.0 Adoption Train (v1.1 target, ~6 weeks)
+### ✅ M13 — Post-1.0 Adoption Train (closed 2026-04-30 — **v1.1.0 released**)
 
-See **[ROADMAP_M13.md](./ROADMAP_M13.md)** for the full plan.
+See **[ROADMAP_M13.md](./ROADMAP_M13.md)** for the full plan and **[RELEASE_NOTES_v1.1.md](./RELEASE_NOTES_v1.1.md)** for shipped scope.
 
-- **Sprint 13.1 — Live UI** (2w, code-complete 🟢 · runtime verification pending):
-  - [x] Backend agent-status broadcast on every Planner/Architect/Developer/Tester/Reviewer transition (`WorkflowService`)
-  - [x] `LiveStreamBridge` Spring `@EventListener` → WebSocket for `BlackboardEntryPostedEvent` (+ unit tests, 5/5 pass)
-  - [x] `MASTViolationService.save()` → live `mast.violation` toast frames
-  - [x] UI native WebSocket client + `useWorkflowStream(workflowId)` hook (`lib/api/live-stream.ts`)
-  - [x] UI orchestration page wired to live stream — phase-driven ReactFlow nodes, Blackboard timeline, MAST toasts, Live/Offline badge
-  - [x] Traefik routes `app.agentmesh.localhost` + `api.agentmesh.localhost` (gateway)
-  - [x] Versioned test scenario: `docs/tests/M13.1-live-ui.md` (Happy 9 / Edge 7 / Fail 5)
-  - [x] k6 WebSocket latency probe authored (`load-tests/ws-latency.js`, threshold p95 < 500 ms)
-  - [ ] Runtime execution of test scenario + k6 probe (requires `agentmesh-api` container up)
-- **Sprint 13.2 — AuthN/Z + Auto-BADS GA** (2w): OAuth2/JWT at Traefik edge, RBAC, Auto-BADS fixes last test and cuts v1.0.0.
-- **Sprint 13.3 — Packaging + Demo Day** (2w): Helm chart, hardened K8s manifests, `make demo`, screencast, **tag v1.1.0**.
+- **Sprint 13.1 — Live UI** ✅ (code-complete + runtime-verified): backend live broadcasts on phase transitions, `LiveStreamBridge` for Blackboard, MAST violation toasts, native WS client, orchestration page wired to live stream, Traefik routes, versioned test scenario, k6 WS-latency probe.
+- **Sprint 13.2 — AuthN/Z + Auto-BADS GA** ✅: RS256 JWT with `JwtIssuer` + `RsaKeyProvider`, per-tenant RBAC matrix, UI auth wiring (login + middleware + 401 refresh), k6 auth-smoke green (bearer p95 313 ms), Auto-BADS v1.0.0 cut (128/128 tests).
+- **Sprint 13.3 — Packaging & Demo Day** ✅ (7-of-7 commits): R6 close (`AUTH_ENFORCED=true` + edge `jwt-auth@docker`), F2 fix (JPA `@Lob` autocommit trap), Helm chart `charts/agentmesh/` (dev/staging/prod), hardened K8s (NetworkPolicy/PSA/HPA-tuned/ServiceMonitor), `make demo` + 9-probe smoke, demo storyboard + walkthrough, **v1.1.0 tag + GitHub release**.
+- **Acceptance:** k6 auth-smoke bearer p95 **20.5 ms** (15× faster than M13.2), `load-test smoke` 1015/1015 checks pass with 0 errors, UAT **21/21**, Helm lint clean for all 3 stages, `make demo` cold-start ~3 min / warm ~30 s, smoke probe **9/9 PASS**. Evidence: [`docs/ACCEPTANCE_M13.3.md`](ACCEPTANCE_M13.3.md).
+
+### 🔲 M14 — Federation, Billing & Studio (v1.2 target)
+
+See **[ROADMAP_M14.md](./ROADMAP_M14.md)** for the full plan.
+
+Carry-overs from v1.1: OAuth2/OIDC at the Traefik edge (forwardAuth → external IdP), Auto-BADS edge-JWT attachment.
+
+New scope: SSO providers (Okta / Azure AD / Keycloak), multi-tenant **billing & metering**, **prompt-library UI**, **LoRA adapter management**, Helm umbrella chart with Bitnami subcharts.
 
 ---
 
